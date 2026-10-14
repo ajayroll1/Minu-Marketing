@@ -139,7 +139,8 @@ export default function Employees({ user: currentUser }) {
   });
 
   const totalPages = Math.ceil(filteredEmployees.length / pageSize) || 1;
-  const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const paginatedEmployees = filteredEmployees.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const getRoleBadge = (role) => {
     switch (role) {

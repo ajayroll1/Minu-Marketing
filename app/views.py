@@ -172,8 +172,11 @@ class AuthForgotPasswordResetView(APIView):
         user.set_password(new_password)
         user.save()
 
-        otp_record.is_verified = True
-        otp_record.save()
+        # Invalidate old auth token for security so stale sessions are terminated
+        Token.objects.filter(user=user).delete()
+
+        # Delete consumed OTP record
+        otp_record.delete()
 
         AuditLog.objects.create(
             user=user,
@@ -183,7 +186,7 @@ class AuthForgotPasswordResetView(APIView):
             details={'email': email}
         )
 
-        return Response({'message': 'Password has been successfully updated. You can now log in.'})
+        return Response({'message': 'Password has been successfully updated. You can now log in with your new password.'})
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')

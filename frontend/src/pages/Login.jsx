@@ -15,16 +15,6 @@ export default function Login({ onLoginSuccess }) {
   const [password, setPassword] = useState('Admin12345!');
   const [activeRole, setActiveRole] = useState('ADMIN');
 
-  // Signup form state
-  const [signupData, setSignupData] = useState({
-    username: '',
-    first_name: '',
-    email: '',
-    password: '',
-    role: 'OPERATOR',
-    otp: ''
-  });
-
   // Forgot password form state
   const [resetData, setResetData] = useState({
     email: '',
@@ -68,8 +58,8 @@ export default function Login({ onLoginSuccess }) {
     }
   };
 
-  // 2. Dispatch OTP (For Signup or Reset)
-  const handleRequestOTP = async (targetEmail, purpose) => {
+  // 2. Dispatch OTP (For Password Reset)
+  const handleRequestOTP = async (targetEmail, purpose = 'RESET') => {
     if (!targetEmail) {
       setError('Please enter a valid email address to receive the verification OTP.');
       return;
@@ -84,24 +74,6 @@ export default function Login({ onLoginSuccess }) {
       setError(err.message);
     } finally {
       setSendingOtp(false);
-    }
-  };
-
-  // 3. Submit Signup with OTP
-  const handleSignupSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await api.signup(signupData);
-      setSuccess('Account created successfully! Logging you in...');
-      setTimeout(() => {
-        onLoginSuccess(signupData.username, signupData.password);
-      }, 800);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -386,137 +358,7 @@ export default function Login({ onLoginSuccess }) {
           )}
 
           {/* ========================================================
-              VIEW 2: CREATE PROFILE (SIGNUP WITH EMAIL OTP)
-             ======================================================== */}
-          {mode === 'SIGNUP' && (
-            <div>
-              <div style={{ marginBottom: '20px' }}>
-                <button 
-                  type="button" 
-                  onClick={() => handleSwitchMode('LOGIN')}
-                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}
-                >
-                  <ArrowLeft size={14} /> Back to Sign In
-                </button>
-                <h1 style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-                  Create New Profile
-                </h1>
-                <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                  Enter your details and verify your email via 6-digit OTP.
-                </p>
-              </div>
-
-              <form onSubmit={handleSignupSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Full Name</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      required
-                      placeholder="e.g. Ajay Mahto"
-                      style={{ borderRadius: '10px', padding: '9px 12px', fontSize: '0.88rem' }}
-                      value={signupData.first_name}
-                      onChange={(e) => setSignupData({ ...signupData, first_name: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Username</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      required
-                      placeholder="e.g. ajaym"
-                      style={{ borderRadius: '10px', padding: '9px 12px', fontSize: '0.88rem' }}
-                      value={signupData.username}
-                      onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: '12px' }}>
-                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Email Address</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input 
-                      type="email" 
-                      className="form-control" 
-                      required
-                      placeholder="ajaymahto2580@gmail.com"
-                      style={{ borderRadius: '10px', padding: '9px 12px', fontSize: '0.88rem' }}
-                      value={signupData.email}
-                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                    />
-                    <button 
-                      type="button" 
-                      className="btn-pill btn-pill-dark"
-                      style={{ padding: '8px 14px', fontSize: '0.78rem', whiteSpace: 'nowrap', borderRadius: '10px' }}
-                      onClick={() => handleRequestOTP(signupData.email, 'SIGNUP')}
-                      disabled={sendingOtp}
-                    >
-                      {sendingOtp ? 'Sending...' : (otpSent ? 'Resend' : 'Send OTP')}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Password</label>
-                    <input 
-                      type="password" 
-                      className="form-control" 
-                      required
-                      placeholder="Set strong password"
-                      style={{ borderRadius: '10px', padding: '9px 12px', fontSize: '0.88rem' }}
-                      value={signupData.password}
-                      onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Assigned Role</label>
-                    <select 
-                      className="form-control"
-                      style={{ borderRadius: '10px', padding: '9px 12px', fontSize: '0.88rem' }}
-                      value={signupData.role}
-                      onChange={(e) => setSignupData({ ...signupData, role: e.target.value })}
-                    >
-                      <option value="OPERATOR">Operator</option>
-                      <option value="MANAGER">Manager</option>
-                      <option value="ADMIN">Administrator</option>
-                      <option value="VIEWER">Viewer</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: '18px' }}>
-                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
-                    6-Digit Verification OTP *
-                  </label>
-                  <input 
-                    type="text" 
-                    className="form-control font-mono" 
-                    required
-                    maxLength="6"
-                    placeholder="Enter 6-digit code received in email"
-                    style={{ borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', letterSpacing: '4px', textAlign: 'center' }}
-                    value={signupData.otp}
-                    onChange={(e) => setSignupData({ ...signupData, otp: e.target.value })}
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn-pill btn-pill-dark" 
-                  style={{ width: '100%', padding: '12px', fontSize: '0.9rem', borderRadius: '10px' }}
-                  disabled={loading}
-                >
-                  {loading ? 'Creating Profile...' : 'Verify OTP & Create Profile'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* ========================================================
-              VIEW 3: FORGOT PASSWORD (RESET VIA EMAIL OTP)
+              VIEW 2: FORGOT PASSWORD (RESET VIA EMAIL OTP)
              ======================================================== */}
           {mode === 'FORGOT_PASSWORD' && (
             <div>

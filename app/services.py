@@ -11,6 +11,11 @@ class InventoryService:
         Executes an inventory transaction atomically, preventing race conditions via select_for_update,
         enforcing zero/positive stock boundaries, generating ledger logs and triggering low-stock alerts.
         """
+        try:
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            raise ValidationError({'quantity': 'Quantity must be a valid integer.'})
+
         if quantity <= 0 and transaction_type in [StockTransaction.TYPE_IN, StockTransaction.TYPE_OUT]:
             raise ValidationError({'quantity': 'Quantity must be a positive integer.'})
 
