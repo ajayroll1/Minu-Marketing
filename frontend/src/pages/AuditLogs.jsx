@@ -68,23 +68,36 @@ export default function AuditLogs() {
       </div>
 
       <div className="white-panel" style={{ padding: 0 }}>
-        {/* Toolbar with Search, Entity Filter & Action Filter */}
-        <div className="panel-toolbar-responsive" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-light)', backgroundColor: '#FAFBFC' }}>
-          <div className="panel-toolbar-left" style={{ flex: 1, minWidth: '240px' }}>
-            <div className="panel-search-box" style={{ flex: 1 }}>
-              <input
-                type="text"
-                className="panel-search-input"
-                placeholder="Search audit trail by user, action, SKU, payload..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
+        {/* Toolbar with Search (narrower), Entity Filter & Action Filter (aligned to the right horizontally) */}
+        <div 
+          className="panel-toolbar-responsive" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            gap: '16px', 
+            padding: '14px 24px', 
+            borderBottom: '1px solid var(--border-light)', 
+            backgroundColor: '#FAFBFC' 
+          }}
+        >
+          <div className="panel-search-box" style={{ maxWidth: '320px', width: '100%', flex: '0 1 320px' }}>
+            <input
+              type="text"
+              className="panel-search-input"
+              placeholder="Search audit trail by user, action, SKU, payload..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+
+          <div className="panel-toolbar-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <select
               className="panel-filter-select"
+              style={{ minWidth: '150px' }}
               value={entityFilter}
               onChange={(e) => {
                 setEntityFilter(e.target.value);
@@ -98,6 +111,7 @@ export default function AuditLogs() {
             </select>
             <select
               className="panel-filter-select"
+              style={{ minWidth: '150px' }}
               value={actionFilter}
               onChange={(e) => {
                 setActionFilter(e.target.value);
@@ -112,8 +126,8 @@ export default function AuditLogs() {
           </div>
         </div>
 
-        <div className="rounded-table-wrapper" style={{ overflow: 'visible' }}>
-          <table style={{ tableLayout: 'fixed', width: '100%' }}>
+        <div className="rounded-table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ tableLayout: 'auto', width: '100%', minWidth: '760px' }}>
             <thead>
               <tr>
                 <th style={{ width: '16%' }}>Timestamp</th>

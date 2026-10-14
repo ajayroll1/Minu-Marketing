@@ -958,6 +958,45 @@ tr:hover td {
   white-space: nowrap;
 }
 
+.panel-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .panel-toolbar-responsive {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+  }
+
+  .panel-toolbar-responsive .panel-search-box {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .panel-toolbar-right {
+    width: 100%;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .panel-toolbar-right .panel-filter-select {
+    flex: 1;
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .panel-toolbar-responsive > .panel-filter-select {
+    width: 100%;
+    min-width: 0 !important;
+  }
+}
+
 /* Buttons */
 .btn-pill {
   display: inline-flex;

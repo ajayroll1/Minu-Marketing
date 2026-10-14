@@ -228,24 +228,36 @@ export default function Employees({ user: currentUser }) {
 
       {/* Main Panel */}
       <div className="white-panel" data-tour="team-directory" style={{ padding: 0 }}>
-        {/* Responsive Toolbar: Search, Role Filter, Status Filter */}
-        <div className="panel-toolbar-responsive" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-light)', backgroundColor: '#FAFBFC' }}>
-          <div className="panel-toolbar-left" style={{ flex: 1, minWidth: '240px' }}>
-            <div className="panel-search-box" style={{ flex: 1 }}>
-              <input
-                type="text"
-                className="panel-search-input"
-                placeholder="Search employees by name, username, email..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
+        {/* Responsive Toolbar: Search (narrower), Role Filter & Status Filter (aligned horizontally to the right) */}
+        <div 
+          className="panel-toolbar-responsive" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            gap: '16px', 
+            padding: '14px 24px', 
+            borderBottom: '1px solid var(--border-light)', 
+            backgroundColor: '#FAFBFC' 
+          }}
+        >
+          <div className="panel-search-box" style={{ maxWidth: '320px', width: '100%', flex: '0 1 320px' }}>
+            <input
+              type="text"
+              className="panel-search-input"
+              placeholder="Search employees by name, username, email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
 
+          <div className="panel-toolbar-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <select
               className="panel-filter-select"
+              style={{ minWidth: '150px' }}
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
@@ -261,6 +273,7 @@ export default function Employees({ user: currentUser }) {
 
             <select
               className="panel-filter-select"
+              style={{ minWidth: '150px' }}
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
