@@ -1,6 +1,6 @@
 # Minu Marketing - Enterprise Inventory Management System (IMS)
 
-An enterprise-grade, high-concurrency inventory telemetry, auditable ledger, automated threshold alert engine, interactive product onboarding tour, and role-based access control (RBAC) suite. Built strictly to modern production standards with **Django 5.1 REST Framework** (Python 3.12+) and **React.js 19 (Vite, JavaScript ES6+)** using a custom iBanko-inspired modern design system.
+An enterprise-grade, high-concurrency inventory telemetry, auditable ledger, automated threshold alert engine, interactive product onboarding tour, and strict Role-Based Access Control (RBAC) suite. Built strictly to modern production standards with **Django 5.1 REST Framework** (Python 3.12+) and **React.js 19 (Vite, JavaScript ES6+)** using a custom iBanko-inspired modern design system.
 
 ---
 
@@ -15,7 +15,7 @@ An enterprise-grade, high-concurrency inventory telemetry, auditable ledger, aut
 
 ---
 
-## 🏗️ Architecture & Production Infrastructure
+## 🏗️ System Architecture & Production Infrastructure
 
 The application uses an enterprise decoupled architecture with zero-latency updates and automated continuous integration (CI/CD):
 
@@ -44,19 +44,22 @@ graph TD
 
 ---
 
-## ⚡ Key Capabilities & Features
+## ⚡ Key Capabilities & Feature Highlights
 
-### 1. Interactive Onboarding & Feature Discovery Tour
-- **Role-Aware Interactive Walkthrough**: Automatically introduces new team members based on permissions (Admin, Manager, Operator, Viewer).
+### 1. Enterprise RBAC & Employee Provisioning
+- **Strict Role-Based Access Control**:
+  - **Administrator**: Full system authority, employee provisioning, role assignment, audit log inspection.
+  - **Inventory Manager**: Stock intake/dispatch, catalog updates, per-product alert thresholds.
+  - **Inventory Operator**: Warehouse operations, physical stock-in, and dispatch transactions.
+  - **Read-Only Viewer**: Auditing, inventory valuation inspection, read-only analytics.
+- **Admin-Controlled Staff Provisioning**: Self-signups are disabled on login to enforce strict enterprise security. Only Administrators can provision new employees through the **"+ Add Employee"** modal.
+- **Protected Master Accounts**: Built-in safeguards prevent self-deactivation or accidental demotion of the primary administrator account.
+
+### 2. Interactive Onboarding & Feature Discovery Tour
+- **Role-Aware Interactive Walkthrough**: Automatically introduces new team members based on their specific permissions.
 - **Celebratory Milestones**: Centered completion badge and animated multi-colored celebration confetti burst on finishing the tour.
 - **Getting Started Checklist**: Interactive tasks with click-to-navigate links, active state pulsing, and auto-dismissal once orientation is complete.
 - **Individual Profile Avatars**: User-scoped custom avatar photo uploads stored independently per account.
-
-### 2. Catalog & Product Lifecycle Management
-- Enforced database-level SKU uniqueness.
-- Comprehensive CRUD with instant category allocation and supplier attribution.
-- Soft-archive and restoration safety mechanisms to prevent broken transaction histories.
-- Real-time instant search by SKU, title, and category with zero layout reflow.
 
 ### 3. Concurrency-Safe Stock Ledger (Append-Only)
 - Concurrency-safe atomic transactions (`STOCK_IN`, `STOCK_OUT`, `ADJUSTMENT`).
@@ -71,18 +74,9 @@ graph TD
 - Automatic deduplication and automated resolution upon restocking.
 - One-click **Download PDF Requisition Report** (powered by ReportLab) and sanitized CSV export.
 
-### 5. Organization & Employee Access Control (RBAC)
-- Built-in multi-tier access privileges:
-  - **Administrator**: Full system authority, team management, catalog modifications.
-  - **Inventory Manager**: Stock intake/dispatch, catalog updates, alert thresholds.
-  - **Inventory Operator**: Warehouse operations, stock-in and dispatch transactions.
-  - **Read-Only Viewer**: Auditing, inventory valuation inspection, read-only analytics.
-- Self-role change protection and root account deactivation prevention.
-- One-click account activation / deactivation toggling.
-
-### 6. Multi-Factor OTP & Security Architecture
+### 5. Multi-Factor OTP & Security Architecture
 - 6-digit cryptographic OTP verification via Gmail SMTP relay (`smtp.gmail.com:587`).
-- Self-signup with email verification and secure self-service password reset.
+- Self-service password recovery with email verification OTP.
 - Sanitized CSV export mitigating CSV Formula Injection attacks (`=`, `+`, `-`, `@`).
 - Constant-time password hashing and DRF Token Authentication supporting cross-origin sessions across Vercel & Render.
 
@@ -104,7 +98,7 @@ graph TD
 
 ## 🚀 How It Is Hosted: Step-by-Step Guide
 
-### A. How the Backend is Hosted on Render
+### A. Backend on Render
 1. A **Web Service** named `minu-marketing` is connected to the GitHub repository [ajayroll1/Minu-Marketing](https://github.com/ajayroll1/Minu-Marketing).
 2. A managed **PostgreSQL** database named `minu-marketing-db` is provisioned on Render.
 3. The Build Command is configured as:
@@ -132,7 +126,7 @@ graph TD
 
 ---
 
-### B. How the Frontend is Hosted on Vercel
+### B. Frontend on Vercel
 1. The GitHub repository is imported into **Vercel**.
 2. **Root Directory** is configured to `frontend`.
 3. Framework preset is detected as **Vite**.
@@ -150,41 +144,96 @@ graph TD
 
 ---
 
-## 🛠️ Local Development Setup
+## 🛠️ Complete Installation & Local Run Guide
 
-### 1. Clone Repository
+### 1. Prerequisites
+- **Git**
+- **Python 3.10+** (Python 3.11 or 3.12 recommended)
+- **Node.js 18+** and **npm 9+**
+
+---
+
+### 2. Clone Repository
 ```bash
 git clone https://github.com/ajayroll1/Minu-Marketing.git
 cd Minu-Marketing
 ```
 
-### 2. Backend Setup (Django)
-```bash
-# Setup virtual environment
-python -m venv venv
-# On Windows:
-.\venv\Scripts\Activate.ps1
-# On macOS/Linux:
-source venv/bin/activate
+---
 
-# Install dependencies
-pip install -r requirements.txt
+### 3. Backend Setup (Django)
 
-# Run migrations and seed data
-python manage.py migrate
-python manage.py seed_data
+1. **Create and activate a virtual environment**:
+   ```bash
+   # On Windows (PowerShell):
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
 
-# Start local server (port 8000)
-python manage.py runserver
-```
+   # On macOS/Linux:
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-### 3. Frontend Setup (React Vite)
-```bash
-cd frontend
-npm install
-npm run dev
-# Vite runs at http://localhost:5173
-```
+2. **Install Python dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure environment variables**:
+   Create a `.env` file in the project root:
+   ```env
+   DEBUG=True
+   SECRET_KEY=local-dev-secret-key-change-in-production
+   ALLOWED_HOSTS=localhost,127.0.0.1
+
+   # Email SMTP (Gmail App Password)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_app_password
+   SMTP_FROM_EMAIL=Minu Marketing <your_email@gmail.com>
+   ```
+
+4. **Apply database migrations and populate seed demo data**:
+   ```bash
+   python manage.py migrate
+   python manage.py seed_data
+   ```
+
+5. **Start Django development server**:
+   ```bash
+   python manage.py runserver
+   # Backend API will be available at http://127.0.0.1:8000/api/v1/
+   ```
+
+---
+
+### 4. Frontend Setup (React Vite)
+
+1. **Open a new terminal window** and navigate to `frontend`:
+   ```bash
+   cd frontend
+   ```
+
+2. **Install Node packages**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure local environment (optional)**:
+   In `frontend/.env.development` or by default, it connects to `http://127.0.0.1:8000`.
+
+4. **Start Vite development server**:
+   ```bash
+   npm run dev
+   # Frontend will be live at http://localhost:5173
+   ```
+
+5. **Build for production**:
+   ```bash
+   npm run build
+   # Compiled assets will be output in frontend/dist/
+   ```
 
 ---
 
@@ -194,10 +243,41 @@ Use any of these pre-seeded accounts to explore the system across different RBAC
 
 | Role | Username | Password | Access Privileges |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `Admin12345!` | Full system control, employee RBAC, audit log inspection |
+| **Administrator** | `admin` | `Admin12345!` | Full system control, employee provisioning, audit log inspection |
 | **Inventory Manager** | `manager` | `Manager12345!` | Catalog management, custom alert limits, stock operations |
 | **Inventory Operator** | `operator` | `Operator12345!` | Stock intake, dispatches, physical warehouse tasks |
 | **Read-Only Viewer** | `viewer` | `Viewer12345!` | Analytics viewing, valuation telemetry, read-only audits |
+
+---
+
+## 📖 How to Use the Application: User Workflow
+
+1. **Login & Role Selection**:
+   - Navigate to [https://minu-marketing.vercel.app](https://minu-marketing.vercel.app).
+   - Click any **Quick Demo Role** button (Admin, Manager, Operator, Viewer) to autofill credentials, or enter custom login credentials.
+2. **Interactive Onboarding Tour**:
+   - First-time logins will automatically be greeted with the **Interactive Product Tour**.
+   - Step through the interactive spotlights or click **"Replay Interactive Tour"** from the top header anytime.
+   - Upon completion, enjoy the celebration confetti animation!
+3. **Inventory Dashboard**:
+   - Review live aggregated inventory valuation, active SKU count, and low-stock indicators.
+   - Use **Quick Stock In / Dispatch** buttons on the dashboard for rapid stock movement.
+4. **Product Catalog**:
+   - Search by SKU, title, or category.
+   - Add new SKUs, modify safety stock thresholds, or soft-archive obsolete items.
+   - Export sanitized catalog CSVs.
+5. **Stock Movement Ledger**:
+   - Inspect append-only transactional audit trail.
+   - Filter transactions by type (`STOCK_IN`, `STOCK_OUT`, `ADJUSTMENT`) or search by reference invoice numbers.
+6. **Automated Alert Settings & Requisitions**:
+   - Set individual threshold trigger quantities per SKU.
+   - Acknowledge or resolve low-stock alerts.
+   - Download professional **PDF Requisition Reports** generated on-the-fly via ReportLab.
+7. **Employees & Team Directory (Admin Only)**:
+   - Click **"+ Add Employee"** to provision new staff members with designated roles and initial passwords.
+   - Promote/demote user roles or activate/deactivate accounts with one click.
+8. **Audit Trail (Admin Only)**:
+   - View an immutable timeline of every security event, role modification, and catalog edit.
 
 ---
 
@@ -206,7 +286,8 @@ Use any of these pre-seeded accounts to explore the system across different RBAC
 Verify backend business rules, atomic stock operations, and RBAC permissions:
 
 ```bash
-pytest app/tests.py -v
+# Using virtual environment Python:
+.\venv\Scripts\python.exe manage.py test app
 ```
 
 ---
