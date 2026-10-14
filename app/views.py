@@ -78,7 +78,9 @@ Minu Marketing Security
                 [email],
                 fail_silently=False
             )
-            return Response({'message': f'Verification OTP successfully dispatched to {email}'})
+            return Response({
+                'message': f"Agar aapka email '{email}' registered hai, toh verification OTP bhej diya gaya hai. Please check your inbox/spam folder."
+            })
         except Exception as e:
             return Response({'error': f'Failed to send OTP via SMTP: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

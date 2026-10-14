@@ -537,6 +537,10 @@ export default function Login({ onLoginSuccess }) {
               </div>
 
               <form onSubmit={handleResetSubmit}>
+                <div style={{ padding: '10px 14px', backgroundColor: '#EFF6FF', color: '#1E40AF', borderRadius: '10px', border: '1px solid #BFDBFE', fontSize: '0.82rem', marginBottom: '16px' }}>
+                  Agar aapka account registered hai, toh Send OTP par click karne par aapke inbox/spam folder mein verification code bhej diya jayega.
+                </div>
+
                 <div className="form-group" style={{ marginBottom: '14px' }}>
                   <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Registered Email</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -551,7 +555,7 @@ export default function Login({ onLoginSuccess }) {
                     />
                     <button 
                       type="button" 
-                      className="btn-pill btn-pill-dark"
+                      className="btn-pill btn-pill-dark" 
                       style={{ padding: '8px 14px', fontSize: '0.78rem', whiteSpace: 'nowrap', borderRadius: '10px' }}
                       onClick={() => handleRequestOTP(resetData.email, 'RESET')}
                       disabled={sendingOtp}
