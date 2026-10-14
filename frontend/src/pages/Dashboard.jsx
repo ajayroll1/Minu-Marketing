@@ -11,6 +11,7 @@ import {
 import OnboardingChecklist from '../components/onboarding/OnboardingChecklist';
 
 export default function Dashboard({ 
+  user,
   onNavigate,
   onboardingState,
   onToggleChecklistItem,
@@ -91,10 +92,11 @@ export default function Dashboard({
 
   return (
     <div>
-      {/* Interactive Onboarding Checklist Banner (Collapsible/Dismissible) */}
-      {onboardingState && !onboardingState.checklist_dismissed && (
+      {/* Interactive Onboarding Checklist Banner (Hidden once Product Tour is COMPLETED or dismissed) */}
+      {onboardingState && !onboardingState.checklist_dismissed && onboardingState.tour_status !== 'COMPLETED' && (
         <div style={{ marginBottom: '24px' }}>
           <OnboardingChecklist 
+            user={user}
             onboardingState={onboardingState}
             onToggleItem={onToggleChecklistItem}
             onDismiss={onDismissChecklist}

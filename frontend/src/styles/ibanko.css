@@ -1844,6 +1844,26 @@ tr:hover td {
   border-color: #DEF7EC;
 }
 
+.onboarding-checklist-row.checklist-item-blink {
+  animation: checklistBlink 0.45s ease-in-out;
+}
+
+@keyframes checklistBlink {
+  0% {
+    background-color: #E0F2FE;
+    transform: scale(0.99);
+    border-color: var(--accent-blue);
+  }
+  50% {
+    background-color: #D1FAE5;
+    transform: scale(1.01);
+    border-color: #10B981;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .checklist-status-icon {
   display: flex;
   align-items: center;

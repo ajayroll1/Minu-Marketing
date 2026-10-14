@@ -41,13 +41,18 @@ export default function App() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // Load persisted avatar scoped to the active user ID
+  useEffect(() => {
+    if (currentUser?.id) {
+      const userSpecificAvatar = localStorage.getItem(`user_custom_avatar_${currentUser.id}`);
+      setAvatarImage(userSpecificAvatar || null);
+    } else {
+      setAvatarImage(null);
+    }
+  }, [currentUser?.id]);
+
   useEffect(() => {
     checkAuth();
-    // Load persisted avatar if any
-    const savedAvatar = localStorage.getItem('user_custom_avatar');
-    if (savedAvatar) {
-      setAvatarImage(savedAvatar);
-    }
   }, []);
 
   // When search opens, focus the input automatically
@@ -311,11 +316,11 @@ export default function App() {
 
   const handleAvatarFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && currentUser?.id) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarImage(reader.result);
-        localStorage.setItem('user_custom_avatar', reader.result);
+        localStorage.setItem(`user_custom_avatar_${currentUser.id}`, reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -724,6 +729,7 @@ export default function App() {
           <section key={activeTab} className="view-content-body">
             {activeTab === 'dashboard' && (
               <Dashboard 
+                user={currentUser}
                 onNavigate={(tab) => setActiveTab(tab)}
                 onboardingState={onboardingState}
                 onToggleChecklistItem={handleToggleChecklistItem}
