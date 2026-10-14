@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { 
   Users, UserCheck, UserX, Shield, ShieldAlert, 
-  Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Edit3, X
+  Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Edit3, X, UserPlus, Mail, Lock, User
 } from 'lucide-react';
 
 export default function Employees({ user: currentUser }) {
@@ -22,6 +22,21 @@ export default function Employees({ user: currentUser }) {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [selectedRole, setSelectedRole] = useState('OPERATOR');
   const [savingRole, setSavingRole] = useState(false);
+
+  // Add Employee Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [addFormError, setAddFormError] = useState(null);
+  const [newEmployee, setNewEmployee] = useState({
+    username: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+    role: 'OPERATOR',
+    password: ''
+  });
+
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.is_superuser;
 
   useEffect(() => {
     loadEmployees();
@@ -81,6 +96,31 @@ export default function Employees({ user: currentUser }) {
     }
   };
 
+  const handleCreateEmployeeSubmit = async (e) => {
+    e.preventDefault();
+    setAddFormError(null);
+    setCreatingUser(true);
+
+    try {
+      const res = await api.createUser(newEmployee);
+      setActionMsg(res.message || `Employee "${newEmployee.username}" created successfully.`);
+      setShowAddModal(false);
+      setNewEmployee({
+        username: '',
+        email: '',
+        first_name: '',
+        last_name: '',
+        role: 'OPERATOR',
+        password: ''
+      });
+      loadEmployees();
+    } catch (err) {
+      setAddFormError(err.message);
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   // Filter employees
   const filteredEmployees = employees.filter(emp => {
     const q = search.toLowerCase().trim();
@@ -131,15 +171,30 @@ export default function Employees({ user: currentUser }) {
       )}
 
       {/* Page Header */}
-      <div className="page-header-responsive">
+      <div className="page-header-responsive" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
         <div className="page-header-text">
-          <h2 className="page-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 className="page-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
             <Users size={22} color="var(--accent-blue)" /> Employees & Team Directory
           </h2>
-          <p className="page-header-desc">
-            Manage organization members, assign access privileges, and activate or deactivate user accounts
+          <p className="page-header-desc" style={{ marginTop: '4px' }}>
+            Manage organization members, assign access privileges, and provision new employee accounts
           </p>
         </div>
+
+        {/* Add Employee Button for Admins */}
+        {isAdmin && (
+          <button 
+            type="button"
+            className="btn-pill btn-pill-dark"
+            onClick={() => {
+              setAddFormError(null);
+              setShowAddModal(true);
+            }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontWeight: 700 }}
+          >
+            <UserPlus size={16} /> Add Employee
+          </button>
+        )}
       </div>
 
       {/* Main Panel */}
@@ -228,28 +283,28 @@ export default function Employees({ user: currentUser }) {
                             borderRadius: '50%',
                             backgroundColor: emp.is_active ? '#EBF5FF' : '#F3F4F6',
                             color: emp.is_active ? '#1D4ED8' : '#6B7280',
+                            fontWeight: 800,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.85rem'
+                            fontSize: '0.88rem'
                           }}
                         >
-                          {emp.username ? emp.username[0].toUpperCase() : 'U'}
+                          {(emp.first_name ? emp.first_name[0] : emp.username[0]).toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.92rem' }}>
                             {emp.first_name ? `${emp.first_name} ${emp.last_name || ''}` : emp.username}
                           </div>
                           <div className="font-mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            @{emp.username} {emp.id === currentUser?.id && <span style={{ color: 'var(--accent-blue)', fontWeight: 700 }}>(You)</span>}
+                            @{emp.username} {emp.id === currentUser?.id ? '(You)' : ''}
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    <td style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                      {emp.email || '-'}
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
+                      {emp.email || '—'}
                     </td>
 
                     <td>
@@ -262,52 +317,48 @@ export default function Employees({ user: currentUser }) {
                           <UserCheck size={12} /> Active
                         </span>
                       ) : (
-                        <span className="badge-pill badge-peach" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <UserX size={12} /> Deactivated
+                        <span className="badge-pill badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#9CA3AF' }}>
+                          <UserX size={12} /> Inactive
                         </span>
                       )}
                     </td>
 
-                    <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      {emp.date_joined ? new Date(emp.date_joined).toLocaleDateString() : '-'}
+                    <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      {new Date(emp.date_joined).toLocaleDateString()}
                     </td>
 
                     <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
-                        {emp.id !== currentUser?.id ? (
+                      <div style={{ display: 'inline-flex', gap: '8px' }}>
+                        {emp.id === currentUser?.id ? (
+                          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, padding: '6px 10px', backgroundColor: '#F1F5F9', borderRadius: '8px' }}>
+                            Protected Account
+                          </span>
+                        ) : (
                           <>
                             <button
+                              type="button"
                               className="btn-pill btn-pill-soft"
-                              style={{ padding: '6px 14px', fontSize: '0.78rem' }}
-                              title="Assign new role"
+                              style={{ padding: '6px 12px', fontSize: '0.76rem' }}
                               onClick={() => handleOpenRoleModal(emp)}
                             >
-                              <Edit3 size={12} /> Change Role
+                              <Edit3 size={13} /> Change Role
                             </button>
 
                             <button
-                              className="btn-pill"
+                              type="button"
+                              className="btn-pill btn-pill-soft"
                               style={{
-                                padding: '6px 14px',
-                                fontSize: '0.78rem',
+                                padding: '6px 12px',
+                                fontSize: '0.76rem',
+                                color: emp.is_active ? '#DC2626' : '#059669',
                                 backgroundColor: emp.is_active ? '#FEE2E2' : '#DEF7EC',
-                                color: emp.is_active ? '#991B1B' : '#03543F',
-                                borderColor: emp.is_active ? '#FCA5A5' : '#84E1BC',
+                                borderColor: emp.is_active ? '#FECACA' : '#BCF0DA'
                               }}
-                              title={emp.is_active ? "Deactivate employee account" : "Activate employee account"}
                               onClick={() => handleToggleActive(emp)}
                             >
                               {emp.is_active ? 'Deactivate' : 'Activate'}
                             </button>
                           </>
-                        ) : (
-                          <span 
-                            className="badge-pill badge-neutral" 
-                            style={{ fontSize: '0.76rem', color: 'var(--text-muted)', border: '1px dashed var(--border-light)', padding: '6px 14px' }}
-                            title="Current administrator session is protected"
-                          >
-                            Protected Account
-                          </span>
                         )}
                       </div>
                     </td>
@@ -318,35 +369,156 @@ export default function Employees({ user: currentUser }) {
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        {filteredEmployees.length > pageSize && (
-          <div className="pagination-bar">
-            <div className="pagination-info">
-              <span>Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong></span>
-              <span>&bull;</span>
-              <span><strong>{filteredEmployees.length}</strong> employees</span>
-            </div>
-            <div className="pagination-controls">
+        {/* Pagination footer */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--border-light)' }}>
+            <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+              Page {currentPage} of {totalPages} &bull; Total {filteredEmployees.length} employees
+            </span>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button 
-                className="btn btn-secondary btn-sm" 
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                type="button" 
+                className="btn-pill btn-pill-soft" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
+                style={{ padding: '6px 10px' }}
               >
-                <ChevronLeft size={13} /> Prev
+                <ChevronLeft size={16} />
               </button>
+
               <button 
-                className="btn btn-secondary btn-sm" 
-                disabled={currentPage >= totalPages}
+                type="button" 
+                className="btn-pill btn-pill-soft" 
+                disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(p => p + 1)}
+                style={{ padding: '6px 10px' }}
               >
-                Next <ChevronRight size={13} />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Role Assignment Modal */}
+      {/* Modal 1: Add New Employee Modal */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content-rounded" style={{ maxWidth: '520px' }}>
+            <div className="modal-header-rounded">
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <UserPlus size={20} color="var(--accent-blue)" /> Add New Employee
+              </h3>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {addFormError && (
+              <div style={{ padding: '12px 16px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '10px', marginBottom: '16px', fontSize: '0.86rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircle size={16} /> {addFormError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateEmployeeSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>First Name</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="e.g. Rahul"
+                    value={newEmployee.first_name}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Last Name</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="e.g. Sharma"
+                    value={newEmployee.last_name}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, last_name: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Username *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required
+                  placeholder="e.g. rahul_sharma"
+                  value={newEmployee.username}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, username: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  placeholder="e.g. rahul@example.com"
+                  value={newEmployee.email}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Assign Role *</label>
+                <select
+                  className="form-control"
+                  value={newEmployee.role}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
+                  style={{ fontWeight: 600 }}
+                >
+                  <option value="OPERATOR">Inventory Operator (Stock In / Dispatch Out)</option>
+                  <option value="MANAGER">Inventory Manager (Stock, Products, Alert Limits)</option>
+                  <option value="ADMIN">Administrator (Full System & User Directory)</option>
+                  <option value="VIEWER">Read-Only Viewer (Auditing & Visibility only)</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Initial Password *</label>
+                <input 
+                  type="password" 
+                  className="form-control" 
+                  required
+                  placeholder="Enter strong temporary password"
+                  value={newEmployee.password}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button 
+                  type="button" 
+                  className="btn-pill btn-pill-soft" 
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-pill btn-pill-dark"
+                  disabled={creatingUser}
+                >
+                  {creatingUser ? 'Creating Employee...' : 'Create Employee'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: Assign Role Modal */}
       {editingEmployee && (
         <div className="modal-overlay">
           <div className="modal-content-rounded">

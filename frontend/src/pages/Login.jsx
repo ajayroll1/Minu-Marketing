@@ -358,18 +358,6 @@ export default function Login({ onLoginSuccess }) {
                 </button>
               </form>
 
-              {/* Create Profile Link */}
-              <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>Don't have an account? </span>
-                <button 
-                  type="button"
-                  onClick={() => handleSwitchMode('SIGNUP')}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer' }}
-                >
-                  Create Profile
-                </button>
-              </div>
-
               {/* Quick Demo Role Selector Pills */}
               <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--border-light)' }}>
                 <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '8px' }}>

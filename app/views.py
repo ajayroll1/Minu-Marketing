@@ -608,6 +608,59 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Only system administrators can view employee records.'}, status=status.HTTP_403_FORBIDDEN)
         return super().retrieve(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        if not self.check_admin_permission(request):
+            return Response({'error': 'Only system administrators can create employee accounts.'}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '').strip()
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        role = data.get('role', UserProfile.ROLE_OPERATOR).strip().upper()
+
+        if not username or not password:
+            return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username__iexact=username).exists():
+            return Response({'error': f"Username '{username}' is already in use."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if email and User.objects.filter(email__iexact=email).exists():
+            return Response({'error': f"Email '{email}' is already associated with an account."}, status=status.HTTP_400_BAD_REQUEST)
+
+        valid_roles = [UserProfile.ROLE_ADMIN, UserProfile.ROLE_MANAGER, UserProfile.ROLE_OPERATOR, UserProfile.ROLE_VIEWER]
+        if role not in valid_roles:
+            return Response({'error': f"Invalid role. Must be one of: {', '.join(valid_roles)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_staff = (role in [UserProfile.ROLE_ADMIN, UserProfile.ROLE_MANAGER])
+        user_obj = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=is_staff,
+            is_active=True
+        )
+
+        profile, _ = UserProfile.objects.get_or_create(user=user_obj)
+        profile.role = role
+        profile.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="USER_CREATED",
+            target_entity="User",
+            target_id=str(user_obj.id),
+            details={'username': user_obj.username, 'email': user_obj.email, 'role': role}
+        )
+
+        return Response({
+            'message': f"Employee '{user_obj.username}' successfully created with role {role}.",
+            'user': UserSerializer(user_obj).data
+        }, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=['post'], url_path='toggle-active')
     def toggle_active(self, request, pk=None):
         if not self.check_admin_permission(request):
