@@ -23,15 +23,16 @@ class UserOnboardingSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['role', 'created_at']
+        fields = ['role', 'avatar', 'created_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source='profile.role', read_only=True)
+    avatar = serializers.CharField(source='profile.avatar', read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'role', 'date_joined', 'last_login']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'role', 'avatar', 'date_joined', 'last_login']
 
 
 class CategorySerializer(serializers.ModelSerializer):

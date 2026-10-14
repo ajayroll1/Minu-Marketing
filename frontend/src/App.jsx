@@ -41,15 +41,15 @@ export default function App() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Load persisted avatar scoped to the active user ID
+  // Load persisted avatar scoped to the active user ID & profile
   useEffect(() => {
     if (currentUser?.id) {
       const userSpecificAvatar = localStorage.getItem(`user_custom_avatar_${currentUser.id}`);
-      setAvatarImage(userSpecificAvatar || null);
+      setAvatarImage(currentUser.avatar || userSpecificAvatar || null);
     } else {
       setAvatarImage(null);
     }
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.avatar]);
 
   useEffect(() => {
     checkAuth();
@@ -318,9 +318,15 @@ export default function App() {
     const file = e.target.files?.[0];
     if (file && currentUser?.id) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarImage(reader.result);
-        localStorage.setItem(`user_custom_avatar_${currentUser.id}`, reader.result);
+      reader.onloadend = async () => {
+        const base64Data = reader.result;
+        setAvatarImage(base64Data);
+        localStorage.setItem(`user_custom_avatar_${currentUser.id}`, base64Data);
+        try {
+          await api.updateAvatar(base64Data);
+        } catch (err) {
+          console.warn('Could not sync avatar to backend profile:', err);
+        }
       };
       reader.readAsDataURL(file);
     }

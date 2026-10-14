@@ -305,22 +305,39 @@ export default function Employees({ user: currentUser }) {
                   <tr key={emp.id} style={{ opacity: emp.is_active ? 1 : 0.65 }}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div 
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            backgroundColor: emp.is_active ? '#EBF5FF' : '#F3F4F6',
-                            color: emp.is_active ? '#1D4ED8' : '#6B7280',
-                            fontWeight: 800,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.88rem'
-                          }}
-                        >
-                          {(emp.first_name ? emp.first_name[0] : emp.username[0]).toUpperCase()}
-                        </div>
+                        {emp.avatar || localStorage.getItem(`user_custom_avatar_${emp.id}`) ? (
+                          <img
+                            src={emp.avatar || localStorage.getItem(`user_custom_avatar_${emp.id}`)}
+                            alt={emp.username}
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '2px solid #FFFFFF',
+                              boxShadow: '0 2px 6px rgba(18, 24, 38, 0.12)',
+                              flexShrink: 0
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '50%',
+                              backgroundColor: emp.is_active ? '#EBF5FF' : '#F3F4F6',
+                              color: emp.is_active ? '#1D4ED8' : '#6B7280',
+                              fontWeight: 800,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.88rem',
+                              flexShrink: 0
+                            }}
+                          >
+                            {(emp.first_name ? emp.first_name[0] : emp.username[0]).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.92rem' }}>
                             {emp.first_name ? `${emp.first_name} ${emp.last_name || ''}` : emp.username}

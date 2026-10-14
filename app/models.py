@@ -18,6 +18,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_OPERATOR)
+    avatar = models.TextField(blank=True, default='')  # Base64 data URL or custom avatar
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

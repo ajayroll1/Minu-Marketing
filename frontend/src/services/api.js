@@ -58,6 +58,7 @@ export const api = {
   login: (username, password) => request('/auth/login/', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/auth/logout/', { method: 'POST' }),
   getCurrentUser: () => request('/auth/me/'),
+  updateAvatar: (avatar) => request('/auth/me/', { method: 'POST', body: JSON.stringify({ avatar }) }),
   sendOTP: (email, purpose) => request('/auth/send-otp/', { method: 'POST', body: JSON.stringify({ email, purpose }) }),
   signup: (signupData) => request('/auth/signup/', { method: 'POST', body: JSON.stringify(signupData) }),
   resetPassword: (resetData) => request('/auth/reset-password/', { method: 'POST', body: JSON.stringify(resetData) }),

@@ -233,11 +233,17 @@ class AuthLogoutView(APIView):
 
 
 class CurrentUserView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        return Response(UserSerializer(request.user).data)
+
+    def post(self, request):
+        avatar = request.data.get('avatar', '')
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile.avatar = avatar
+        profile.save()
         return Response(UserSerializer(request.user).data)
 
 
