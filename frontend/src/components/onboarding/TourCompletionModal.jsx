@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { 
   CheckCircle2, Compass, ArrowRight, RotateCcw, 
   ChevronRight, Sparkles 
@@ -14,31 +15,73 @@ export default function TourCompletionModal({
 }) {
   const firstName = user?.first_name || user?.username || 'Team Member';
 
+  // Trigger celebratory confetti burst on mount
+  useEffect(() => {
+    // Center cannon burst
+    try {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10B981', '#3B82F6', '#6366F1', '#F59E0B', '#EC4899'],
+        disableForReducedMotion: true
+      });
+
+      // Secondary left & right celebration streams
+      const timer = setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.7 },
+          colors: ['#10B981', '#3B82F6', '#60A5FA']
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.7 },
+          colors: ['#10B981', '#3B82F6', '#F59E0B']
+        });
+      }, 250);
+
+      return () => clearTimeout(timer);
+    } catch (e) {
+      console.warn('Celebration confetti effect:', e);
+    }
+  }, []);
+
   return (
     <div className="onboarding-modal-overlay">
       <div className="onboarding-welcome-card" style={{ textAlign: 'center' }}>
-        <div 
-          style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            backgroundColor: '#DEF7EC',
-            color: '#03543F',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px',
-            boxShadow: '0 8px 24px rgba(3, 84, 63, 0.12)'
-          }}
-        >
-          <CheckCircle2 size={36} color="#059669" />
+        
+        {/* Centered green check icon circle ABOVE the badge */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+          <div 
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: '#DEF7EC',
+              color: '#03543F',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(3, 84, 63, 0.14)'
+            }}
+          >
+            <CheckCircle2 size={36} color="#059669" />
+          </div>
         </div>
 
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }} className="badge-pill badge-mint">
-          <Sparkles size={13} /> Tour Complete
+        {/* Tour Complete pill centered directly underneath the icon */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <div className="badge-pill badge-mint" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={13} /> TOUR COMPLETE
+          </div>
         </div>
 
-        <h2 className="onboarding-welcome-title" style={{ marginTop: '4px' }}>
+        <h2 className="onboarding-welcome-title" style={{ marginTop: '0', fontSize: '1.45rem' }}>
           You're all set, {firstName}! 🎉
         </h2>
 
