@@ -546,12 +546,12 @@ export default function Employees({ user: currentUser }) {
               </div>
 
               <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Initial Password *</label>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Password *</label>
                 <input 
                   type="password" 
                   className="form-control" 
                   required
-                  placeholder="Enter strong temporary password"
+                  placeholder="Enter password"
                   value={newEmployee.password}
                   onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
                 />
