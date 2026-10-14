@@ -8,8 +8,15 @@ import {
 import { 
   BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend 
 } from 'recharts';
+import OnboardingChecklist from '../components/onboarding/OnboardingChecklist';
 
-export default function Dashboard({ onNavigate }) {
+export default function Dashboard({ 
+  onNavigate,
+  onboardingState,
+  onToggleChecklistItem,
+  onDismissChecklist,
+  onReplayTour
+}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -84,6 +91,19 @@ export default function Dashboard({ onNavigate }) {
 
   return (
     <div>
+      {/* Interactive Onboarding Checklist Banner (Collapsible/Dismissible) */}
+      {onboardingState && !onboardingState.checklist_dismissed && (
+        <div style={{ marginBottom: '24px' }}>
+          <OnboardingChecklist 
+            onboardingState={onboardingState}
+            onToggleItem={onToggleChecklistItem}
+            onDismiss={onDismissChecklist}
+            onNavigate={onNavigate}
+            onReplayTour={onReplayTour}
+          />
+        </div>
+      )}
+
       {successMsg && (
         <div style={{ padding: '14px 20px', backgroundColor: '#DEF7EC', color: '#03543F', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 700 }}>
           <CheckCircle2 size={18} /> {successMsg}
@@ -91,7 +111,7 @@ export default function Dashboard({ onNavigate }) {
       )}
 
       {/* 1. Hero Black Card (from "My Card" in iBanko mockup) */}
-      <div className="hero-black-card">
+      <div className="hero-black-card" data-tour="dash-valuation">
         <div>
           <div className="hero-balance-label">Total Inventory Valuation</div>
           <div className="hero-balance-val font-mono">
@@ -102,7 +122,7 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </div>
 
-        <div className="hero-pill-actions">
+        <div className="hero-pill-actions" data-tour="dash-quick-actions">
           <button className="btn-pill-white" onClick={() => onNavigate && onNavigate('transactions')}>
             <ArrowDownLeft size={16} color="#059669" /> Stock In
           </button>
@@ -113,7 +133,7 @@ export default function Dashboard({ onNavigate }) {
       </div>
 
       {/* 2. Three Soft Pastel Record Cards (Mint, Peach, Lavender from Mockup) */}
-      <div className="record-grid">
+      <div className="record-grid" data-tour="dash-kpis">
         {/* Mint Card - Catalog Units */}
         <div className="record-card mint">
           <div className="record-card-title">
@@ -152,7 +172,7 @@ export default function Dashboard({ onNavigate }) {
       </div>
 
       {/* 3. Analytics Charts Grid */}
-      <div className="dashboard-charts-grid">
+      <div className="dashboard-charts-grid" data-tour="dash-charts">
         {/* Movement Flow (Money Flow in Mockup) */}
         <div className="white-panel">
           <div className="white-panel-header">

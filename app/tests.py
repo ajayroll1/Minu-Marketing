@@ -115,3 +115,49 @@ class TestInventoryCore:
         assert not LowStockAlert.objects.filter(product=self.product, status=LowStockAlert.STATUS_ACTIVE).exists()
         resolved = LowStockAlert.objects.filter(product=self.product, status=LowStockAlert.STATUS_RESOLVED).first()
         assert resolved is not None
+
+
+@pytest.mark.django_db
+class TestOnboardingEndpoints:
+    def setup_method(self):
+        from rest_framework.test import APIClient
+        from app.models import UserOnboarding
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='onboard_user', password='password123')
+        UserProfile.objects.create(user=self.user, role=UserProfile.ROLE_ADMIN)
+        self.client.force_authenticate(user=self.user)
+
+    def test_get_or_create_onboarding_status(self):
+        res = self.client.get('/api/v1/onboarding/status/')
+        assert res.status_code == 200
+        assert res.data['tour_status'] == 'NOT_STARTED'
+        assert res.data['welcome_seen'] is False
+
+    def test_start_tour(self):
+        res = self.client.post('/api/v1/onboarding/start/')
+        assert res.status_code == 200
+        assert res.data['tour_status'] == 'IN_PROGRESS'
+        assert res.data['welcome_seen'] is True
+
+    def test_save_progress_and_complete_checklist(self):
+        self.client.post('/api/v1/onboarding/start/')
+        save_res = self.client.post('/api/v1/onboarding/save-progress/', {'current_chapter': 'catalog', 'current_step_index': 3}, format='json')
+        assert save_res.status_code == 200
+        assert save_res.data['current_chapter'] == 'catalog'
+        assert save_res.data['current_step_index'] == 3
+
+        chk_res = self.client.post('/api/v1/onboarding/complete-checklist-item/', {'item_id': 'explore_dashboard'}, format='json')
+        assert chk_res.status_code == 200
+        assert 'explore_dashboard' in chk_res.data['completed_checklist_items']
+
+    def test_finish_and_restart_tour(self):
+        fin_res = self.client.post('/api/v1/onboarding/finish/')
+        assert fin_res.status_code == 200
+        assert fin_res.data['tour_status'] == 'COMPLETED'
+        assert fin_res.data['completed_at'] is not None
+
+        rst_res = self.client.post('/api/v1/onboarding/restart/')
+        assert rst_res.status_code == 200
+        assert rst_res.data['tour_status'] == 'IN_PROGRESS'
+        assert rst_res.data['current_step_index'] == 0
+

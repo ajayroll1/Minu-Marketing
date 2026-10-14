@@ -143,7 +143,7 @@ export default function Employees({ user: currentUser }) {
       </div>
 
       {/* Main Panel */}
-      <div className="white-panel" style={{ padding: 0 }}>
+      <div className="white-panel" data-tour="team-directory" style={{ padding: 0 }}>
         {/* Responsive Toolbar: Search, Role Filter, Status Filter */}
         <div className="panel-toolbar-responsive" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-light)', backgroundColor: '#FAFBFC' }}>
           <div className="panel-toolbar-left" style={{ flex: 1, minWidth: '240px' }}>

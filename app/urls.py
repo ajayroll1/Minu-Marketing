@@ -5,7 +5,8 @@ from app.views import (
     AuthSendOTPView, AuthSignupView, AuthForgotPasswordResetView,
     CategoryViewSet, SupplierViewSet, ProductViewSet,
     StockTransactionViewSet, LowStockAlertViewSet,
-    DashboardSummaryView, ExportReportsView, AuditLogViewSet, UserViewSet
+    DashboardSummaryView, ExportReportsView, AuditLogViewSet, UserViewSet,
+    OnboardingViewSet
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ router.register(r'stock-transactions', StockTransactionViewSet, basename='stock-
 router.register(r'alerts', LowStockAlertViewSet, basename='alert')
 router.register(r'audit-logs', AuditLogViewSet, basename='audit-log')
 router.register(r'users', UserViewSet, basename='user')
+router.register(r'onboarding', OnboardingViewSet, basename='onboarding')
 
 urlpatterns = [
     # Auth Endpoints

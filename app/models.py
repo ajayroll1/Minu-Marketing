@@ -220,3 +220,42 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} on {self.target_entity}:{self.target_id} by {self.user}"
+
+
+class UserOnboarding(models.Model):
+    """
+    Tracks interactive onboarding tour state, checklist completion,
+    and progress persistence per user across sessions.
+    """
+    STATUS_NOT_STARTED = 'NOT_STARTED'
+    STATUS_IN_PROGRESS = 'IN_PROGRESS'
+    STATUS_COMPLETED = 'COMPLETED'
+    STATUS_SKIPPED = 'SKIPPED'
+
+    STATUS_CHOICES = [
+        (STATUS_NOT_STARTED, 'Not Started'),
+        (STATUS_IN_PROGRESS, 'In Progress'),
+        (STATUS_COMPLETED, 'Completed'),
+        (STATUS_SKIPPED, 'Skipped'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='onboarding')
+    version = models.CharField(max_length=20, default='1.0')
+    welcome_seen = models.BooleanField(default=False)
+    tour_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NOT_STARTED)
+    current_chapter = models.CharField(max_length=50, default='overview')
+    current_step_index = models.PositiveIntegerField(default=0)
+    completed_chapters = models.JSONField(default=list, blank=True)
+    completed_checklist_items = models.JSONField(default=list, blank=True)
+    checklist_dismissed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    skipped_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Onboarding: {self.user.username} ({self.tour_status})"
+

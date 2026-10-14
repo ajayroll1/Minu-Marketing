@@ -90,7 +90,7 @@ export default function Transactions({ user }) {
       )}
 
       {/* Control bar */}
-      <div className="page-header-responsive">
+      <div className="page-header-responsive" data-tour="ledger-header">
         <div className="page-header-text">
           <h2 className="page-header-title">Stock Movement Ledger</h2>
           <p className="page-header-desc">Auditable history of inbound, outbound, and physical audit adjustments</p>
@@ -110,7 +110,7 @@ export default function Transactions({ user }) {
 
       {/* Ledger Table */}
       <div className="card" style={{ padding: 0 }}>
-        <div className="table-wrapper" style={{ border: 'none', borderRadius: 'var(--radius-md) var(--radius-md) 0 0' }}>
+        <div className="table-wrapper" data-tour="ledger-filters" style={{ border: 'none', borderRadius: 'var(--radius-md) var(--radius-md) 0 0' }}>
           <table>
             <thead>
               <tr>

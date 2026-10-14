@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, Package, ArrowLeftRight, Bell, Shield, 
   LogOut, SlidersHorizontal, Camera, Calendar, CheckCircle2,
-  X, Filter, ChevronDown, Check, Search, Users
+  X, Filter, ChevronDown, Check, Search, Users, Compass, HelpCircle
 } from 'lucide-react';
 import { api } from './services/api';
 import Dashboard from './pages/Dashboard';
@@ -12,6 +12,10 @@ import Alerts from './pages/Alerts';
 import AuditLogs from './pages/AuditLogs';
 import Employees from './pages/Employees';
 import Login from './pages/Login';
+import WelcomeModal from './components/onboarding/WelcomeModal';
+import TourSpotlightTooltip from './components/onboarding/TourSpotlightTooltip';
+import TourCompletionModal from './components/onboarding/TourCompletionModal';
+import { TOUR_CHAPTERS, TOUR_STEPS } from './config/tourConfig';
 import './styles/ibanko.css';
 
 export default function App() {
@@ -81,15 +85,153 @@ export default function App() {
   }, [searchQuery]);
 
 
+  // Onboarding & Tour State
+  const [onboardingState, setOnboardingState] = useState(null);
+  const [isTourActive, setIsTourActive] = useState(false);
+  const [currentTourStepIdx, setCurrentTourStepIdx] = useState(0);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
+
   const checkAuth = async () => {
     try {
       const user = await api.getCurrentUser();
       setCurrentUser(user);
       loadAlertCount();
+      loadOnboarding(user);
     } catch {
       setCurrentUser(null);
     } finally {
       setLoadingAuth(false);
+    }
+  };
+
+  const loadOnboarding = async (user) => {
+    try {
+      const data = await api.getOnboardingStatus();
+      setOnboardingState(data);
+      // Trigger welcome modal on first login if not seen and not started
+      if (!data.welcome_seen && data.tour_status === 'NOT_STARTED') {
+        setWelcomeOpen(true);
+      }
+    } catch (err) {
+      console.error("Failed to load onboarding status", err);
+    }
+  };
+
+  // Filter tour steps based on user role
+  const getFilteredTourSteps = () => {
+    const role = currentUser?.role || 'OPERATOR';
+    const isSuper = currentUser?.is_superuser;
+    return TOUR_STEPS.filter(step => {
+      if (step.roleRequirement === 'ALL') return true;
+      if (step.roleRequirement === 'ADMIN') return role === 'ADMIN' || isSuper;
+      if (step.roleRequirement === 'MANAGER') return role === 'ADMIN' || role === 'MANAGER' || isSuper;
+      if (step.roleRequirement === 'OPERATOR') return role !== 'VIEWER';
+      return true;
+    });
+  };
+
+  const activeTourSteps = currentUser ? getFilteredTourSteps() : [];
+
+  // Automatically sync tab with current step's tab
+  const goToTourStep = (targetIdx) => {
+    if (targetIdx < 0 || targetIdx >= activeTourSteps.length) return;
+    const nextStep = activeTourSteps[targetIdx];
+    setCurrentTourStepIdx(targetIdx);
+    if (nextStep.tab && activeTab !== nextStep.tab) {
+      setActiveTab(nextStep.tab);
+    }
+    // Save progress to backend
+    api.saveTourProgress(nextStep.chapter, targetIdx).catch(console.error);
+  };
+
+  const handleStartTour = async () => {
+    setWelcomeOpen(false);
+    try {
+      const updated = await api.startTour();
+      setOnboardingState(updated);
+      setIsTourActive(true);
+      setCurrentTourStepIdx(0);
+      const firstStep = activeTourSteps[0];
+      if (firstStep?.tab) {
+        setActiveTab(firstStep.tab);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsTourActive(true);
+      setCurrentTourStepIdx(0);
+    }
+  };
+
+  const handleSkipTour = async () => {
+    setWelcomeOpen(false);
+    setIsTourActive(false);
+    try {
+      const updated = await api.skipTour();
+      setOnboardingState(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFinishTour = async () => {
+    setIsTourActive(false);
+    setCompletionOpen(true);
+    try {
+      const updated = await api.finishTour();
+      setOnboardingState(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRestartTour = async () => {
+    setCompletionOpen(false);
+    try {
+      const updated = await api.restartTour();
+      setOnboardingState(updated);
+      setIsTourActive(true);
+      setCurrentTourStepIdx(0);
+      const firstStep = activeTourSteps[0];
+      if (firstStep?.tab) {
+        setActiveTab(firstStep.tab);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsTourActive(true);
+      setCurrentTourStepIdx(0);
+    }
+  };
+
+  const handleNextTourStep = () => {
+    if (currentTourStepIdx < activeTourSteps.length - 1) {
+      goToTourStep(currentTourStepIdx + 1);
+    } else {
+      handleFinishTour();
+    }
+  };
+
+  const handlePrevTourStep = () => {
+    if (currentTourStepIdx > 0) {
+      goToTourStep(currentTourStepIdx - 1);
+    }
+  };
+
+  const handleToggleChecklistItem = async (itemId) => {
+    try {
+      const updated = await api.completeChecklistItem(itemId);
+      setOnboardingState(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDismissChecklist = async () => {
+    try {
+      const updated = await api.dismissChecklist();
+      setOnboardingState(updated);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -142,6 +284,7 @@ export default function App() {
     setCurrentUser(res.user);
     setActiveTab('dashboard');
     loadAlertCount();
+    loadOnboarding(res.user);
   };
 
   const handleLogout = async () => {
@@ -155,6 +298,8 @@ export default function App() {
         console.error(e);
       } finally {
         setCurrentUser(null);
+        setOnboardingState(null);
+        setIsTourActive(false);
         setIsLoggingOut(false);
       }
     }, 620);
@@ -309,6 +454,7 @@ export default function App() {
 
                 <div 
                   className={`sidebar-item ${activeTab === 'audit' ? 'active' : ''}`}
+                  data-tour="nav-audit-logs"
                   onClick={() => { setActiveTab('audit'); setMobileSidebarOpen(false); }}
                 >
                   <Shield size={18} />
@@ -364,18 +510,19 @@ export default function App() {
 
 
             <div className="topbar-right-controls">
-              <a 
-                href="http://localhost:8000/api/docs/" 
-                target="_blank" 
-                rel="noreferrer" 
+              {/* Product Tour Trigger Button */}
+              <button 
                 className="btn-pill btn-pill-soft"
-                style={{ fontSize: '0.8rem', padding: '8px 16px' }}
+                onClick={handleRestartTour}
+                title="Take Interactive Product Tour"
+                style={{ fontSize: '0.8rem', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                API Swagger
-              </a>
+                <Compass size={15} color="var(--accent-blue)" />
+                <span>Product Tour</span>
+              </button>
 
               {/* Smooth Expandable Search Bar (Right to Left Transition) */}
-              <div className={`topbar-search-wrapper ${searchOpen ? 'open' : ''}`}>
+              <div className={`topbar-search-wrapper ${searchOpen ? 'open' : ''}`} data-tour="topbar-search">
                 <div 
                   className="icon-btn-round search-trigger-btn" 
                   title={searchOpen ? "Close Search" : "Search Catalog & Items"}
@@ -571,7 +718,15 @@ export default function App() {
           </header>
 
           <section key={activeTab} className="view-content-body">
-            {activeTab === 'dashboard' && <Dashboard onNavigate={(tab) => setActiveTab(tab)} />}
+            {activeTab === 'dashboard' && (
+              <Dashboard 
+                onNavigate={(tab) => setActiveTab(tab)}
+                onboardingState={onboardingState}
+                onToggleChecklistItem={handleToggleChecklistItem}
+                onDismissChecklist={handleDismissChecklist}
+                onReplayTour={handleRestartTour}
+              />
+            )}
             {activeTab === 'products' && <Products user={currentUser} />}
             {activeTab === 'transactions' && <Transactions user={currentUser} />}
             {activeTab === 'alerts' && <Alerts user={currentUser} />}
@@ -580,6 +735,42 @@ export default function App() {
           </section>
         </main>
       </div>
+
+      {/* Onboarding Modals & Spotlight Tooltip */}
+      {welcomeOpen && (
+        <WelcomeModal 
+          user={currentUser} 
+          onStartTour={handleStartTour} 
+          onSkipTour={handleSkipTour} 
+        />
+      )}
+
+      {isTourActive && activeTourSteps[currentTourStepIdx] && (
+        <TourSpotlightTooltip 
+          step={activeTourSteps[currentTourStepIdx]}
+          stepIndex={currentTourStepIdx}
+          totalSteps={activeTourSteps.length}
+          chapterInfo={TOUR_CHAPTERS.find(c => c.id === activeTourSteps[currentTourStepIdx].chapter)}
+          onNext={handleNextTourStep}
+          onPrev={handlePrevTourStep}
+          onSkip={handleSkipTour}
+          onFinish={handleFinishTour}
+        />
+      )}
+
+      {completionOpen && (
+        <TourCompletionModal 
+          user={currentUser}
+          completedStepsCount={activeTourSteps.length}
+          totalStepsCount={activeTourSteps.length}
+          onFinish={() => setCompletionOpen(false)}
+          onRestart={handleRestartTour}
+          onOpenChecklist={() => {
+            setCompletionOpen(false);
+            setActiveTab('dashboard');
+          }}
+        />
+      )}
     </div>
   );
 }

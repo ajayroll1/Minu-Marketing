@@ -18,11 +18,15 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
 import random
-from app.models import Category, Supplier, Product, StockTransaction, LowStockAlert, AuditLog, UserProfile, EmailOTP
+from app.models import (
+    Category, Supplier, Product, StockTransaction, 
+    LowStockAlert, AuditLog, UserProfile, EmailOTP, UserOnboarding
+)
 from app.serializers import (
     CategorySerializer, SupplierSerializer, ProductSerializer,
     StockTransactionSerializer, StockTransactionCreateSerializer,
-    LowStockAlertSerializer, AuditLogSerializer, UserSerializer
+    LowStockAlertSerializer, AuditLogSerializer, UserSerializer,
+    UserOnboardingSerializer
 )
 from app.permissions import RoleBasedPermission
 from app.services import InventoryService
@@ -662,3 +666,131 @@ class UserViewSet(viewsets.ModelViewSet):
             'message': f"Role for '{user_obj.username}' updated to {new_role}.",
             'user': UserSerializer(user_obj).data
         })
+
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class OnboardingViewSet(viewsets.ViewSet):
+    """
+    Persistent Onboarding & Interactive Tour API Gateway:
+    - Dedicated per-user onboarding state isolation
+    - Idempotent and safe to retry
+    - Tracks welcome modal, tour progress, chapter completion, checklist items, skip, and replay
+    """
+    permission_classes = [IsAuthenticated]
+
+    def _get_or_create_onboarding(self, user):
+        onboarding, _ = UserOnboarding.objects.get_or_create(
+            user=user,
+            defaults={
+                'version': '1.0',
+                'tour_status': UserOnboarding.STATUS_NOT_STARTED,
+                'completed_chapters': [],
+                'completed_checklist_items': [],
+            }
+        )
+        return onboarding
+
+    @action(detail=False, methods=['get'], url_path='status')
+    def get_status(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='start')
+    def start_tour(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        onboarding.welcome_seen = True
+        if onboarding.tour_status == UserOnboarding.STATUS_NOT_STARTED:
+            onboarding.tour_status = UserOnboarding.STATUS_IN_PROGRESS
+        onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='save-progress')
+    def save_progress(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        chapter = request.data.get('chapter') or request.data.get('current_chapter') or onboarding.current_chapter
+        step_index = request.data.get('step_index') if request.data.get('step_index') is not None else request.data.get('current_step_index')
+        if step_index is None:
+            step_index = onboarding.current_step_index
+
+        onboarding.current_chapter = str(chapter)
+        onboarding.current_step_index = int(step_index)
+        if onboarding.tour_status == UserOnboarding.STATUS_NOT_STARTED:
+            onboarding.tour_status = UserOnboarding.STATUS_IN_PROGRESS
+        onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='complete-chapter')
+    def complete_chapter(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        chapter = request.data.get('chapter')
+        if chapter:
+            completed = set(onboarding.completed_chapters or [])
+            completed.add(str(chapter))
+            onboarding.completed_chapters = list(completed)
+            onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='complete-checklist-item')
+    def complete_checklist_item(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        item_id = request.data.get('item_id')
+        if item_id:
+            items = set(onboarding.completed_checklist_items or [])
+            items.add(str(item_id))
+            onboarding.completed_checklist_items = list(items)
+            onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='dismiss-checklist')
+    def dismiss_checklist(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        onboarding.checklist_dismissed = True
+        onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='skip')
+    def skip_tour(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        onboarding.welcome_seen = True
+        onboarding.tour_status = UserOnboarding.STATUS_SKIPPED
+        onboarding.skipped_at = timezone.now()
+        onboarding.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="ONBOARDING_TOUR_SKIPPED",
+            target_entity="UserOnboarding",
+            target_id=str(onboarding.id),
+            details={'username': request.user.username}
+        )
+
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='finish')
+    def finish_tour(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        onboarding.welcome_seen = True
+        onboarding.tour_status = UserOnboarding.STATUS_COMPLETED
+        onboarding.completed_at = timezone.now()
+        onboarding.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="ONBOARDING_TOUR_COMPLETED",
+            target_entity="UserOnboarding",
+            target_id=str(onboarding.id),
+            details={'username': request.user.username}
+        )
+
+        return Response(UserOnboardingSerializer(onboarding).data)
+
+    @action(detail=False, methods=['post'], url_path='restart')
+    def restart_tour(self, request):
+        onboarding = self._get_or_create_onboarding(request.user)
+        onboarding.welcome_seen = True
+        onboarding.tour_status = UserOnboarding.STATUS_IN_PROGRESS
+        onboarding.current_chapter = 'overview'
+        onboarding.current_step_index = 0
+        onboarding.save()
+        return Response(UserOnboardingSerializer(onboarding).data)
+

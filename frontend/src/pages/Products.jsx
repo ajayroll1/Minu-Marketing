@@ -158,7 +158,7 @@ export default function Products({ user }) {
 
       {/* Control bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px', maxWidth: '580px' }}>
+        <div data-tour="products-filters" style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px', maxWidth: '580px' }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--color-muted)' }} />
             <input 
@@ -182,7 +182,7 @@ export default function Products({ user }) {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div data-tour="products-header-actions" style={{ display: 'flex', gap: '12px' }}>
           <a href={api.getExportUrl('products')} download className="btn btn-secondary">
             <Download size={16} /> Export Catalog CSV
           </a>
@@ -255,7 +255,7 @@ export default function Products({ user }) {
                     </td>
                     {canEdit && (
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <div data-tour="products-table-actions" style={{ display: 'inline-flex', gap: '6px' }}>
                           <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEdit(p)} title="Edit details">
                             <Edit2 size={13} /> Edit
                           </button>

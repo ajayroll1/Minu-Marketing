@@ -152,7 +152,7 @@ export default function Alerts({ user }) {
       </div>
 
       {/* 1. Active Alerts Feed */}
-      <div className="white-panel" style={{ padding: 0, marginBottom: '28px' }}>
+      <div className="white-panel" data-tour="alerts-live-table" style={{ padding: 0, marginBottom: '28px' }}>
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)' }}>
           <h3 className="white-panel-title">
             <AlertTriangle size={18} color="#D97706" /> Live Triggered Alerts
@@ -300,7 +300,7 @@ export default function Alerts({ user }) {
       </div>
 
       {/* 2. Custom Alert Threshold Configuration Panel for All Catalog SKUs */}
-      <div className="white-panel" style={{ padding: 0 }}>
+      <div className="white-panel" data-tour="alerts-threshold-settings" style={{ padding: 0 }}>
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)' }}>
           <h3 className="white-panel-title">
             <Settings2 size={18} color="var(--accent-blue)" /> Custom Alert Threshold Settings per Product

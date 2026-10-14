@@ -12,13 +12,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / '.env')
 
+import dj_database_url
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ims-core-fallback-secret-key-12345')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 't')
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',') if host.strip()]
+# ALLOWED_HOSTS: automatically allow localhost, 127.0.0.1, .onrender.com, .vercel.app, and custom env
+allowed_hosts_env = os.getenv('DJANGO_ALLOWED_HOSTS', '')
+base_allowed = ['localhost', '127.0.0.1', '0.0.0.0', '.onrender.com', '.vercel.app']
+if allowed_hosts_env:
+    base_allowed.extend([h.strip() for h in allowed_hosts_env.split(',') if h.strip()])
+ALLOWED_HOSTS = list(set(base_allowed))
 
 # Application definition
 INSTALLED_APPS = [
@@ -27,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
 
     # Third-party libraries
@@ -41,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,28 +79,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-# Database Configuration (PostgreSQL primary / SQLite dev fallback)
-db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
-db_name = os.getenv('DB_NAME', str(BASE_DIR / 'inventory_db.sqlite3'))
-
-if 'sqlite' in db_engine:
+# Database Configuration (DATABASE_URL takes precedence e.g. on Render Postgres, falls back to SQLite or env)
+database_url = os.getenv('DATABASE_URL')
+if database_url:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / (os.getenv('DB_NAME') or 'inventory_db.sqlite3'),
-        }
+        'default': dj_database_url.config(
+            default=database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': db_engine,
-            'NAME': db_name,
-            'USER': os.getenv('DB_USER', 'inventory_user'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+    db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
+    db_name = os.getenv('DB_NAME', str(BASE_DIR / 'inventory_db.sqlite3'))
+
+    if 'sqlite' in db_engine:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / (os.getenv('DB_NAME') or 'inventory_db.sqlite3'),
+            }
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': db_engine,
+                'NAME': db_name,
+                'USER': os.getenv('DB_USER', 'inventory_user'),
+                'PASSWORD': os.getenv('DB_PASSWORD', ''),
+                'HOST': os.getenv('DB_HOST', 'localhost'),
+                'PORT': os.getenv('DB_PORT', '5432'),
+            }
+        }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -118,6 +137,7 @@ USE_TZ = True
 # Static & Media files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -151,11 +171,40 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-# CORS Configuration
-cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins if origin.strip()]
+# CORS & CSRF Configuration for Vercel Frontend + Render Backend
+cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+default_cors = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+if cors_origins_env:
+    default_cors.extend([orig.strip() for orig in cors_origins_env.split(',') if orig.strip()])
+
+CORS_ALLOWED_ORIGINS = list(set(default_cors))
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in cors_origins if origin.strip()]
+
+# Match any *.vercel.app deployment preview or custom domain
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.vercel\.app$",
+    r"^https:\/\/.*\.onrender\.com$",
+]
+
+# CSRF Trusted Origins
+csrf_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+default_csrf = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://*.vercel.app',
+    'https://*.onrender.com',
+]
+if csrf_origins_env:
+    default_csrf.extend([orig.strip() for orig in csrf_origins_env.split(',') if orig.strip()])
+CSRF_TRUSTED_ORIGINS = list(set(default_csrf))
+
+CSRF_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG
 
 # SMTP & Email Alert Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

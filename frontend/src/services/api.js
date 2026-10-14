@@ -1,4 +1,5 @@
-const API_BASE = '/api/v1';
+const BACKEND_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api/v1` : '/api/v1';
 
 function getCookie(name) {
   let cookieValue = null;
@@ -92,6 +93,17 @@ export const api = {
   getUsers: (params = '') => request(`/users/${params}`),
   toggleUserActive: (id) => request(`/users/${id}/toggle-active/`, { method: 'POST' }),
   updateUserRole: (id, role) => request(`/users/${id}/update-role/`, { method: 'POST', body: JSON.stringify({ role }) }),
+
+  // Onboarding & Interactive Tour Gateway
+  getOnboardingStatus: () => request('/onboarding/status/'),
+  startTour: () => request('/onboarding/start/', { method: 'POST' }),
+  saveTourProgress: (chapter, step_index) => request('/onboarding/save-progress/', { method: 'POST', body: JSON.stringify({ chapter, step_index }) }),
+  completeTourChapter: (chapter) => request('/onboarding/complete-chapter/', { method: 'POST', body: JSON.stringify({ chapter }) }),
+  completeChecklistItem: (item_id) => request('/onboarding/complete-checklist-item/', { method: 'POST', body: JSON.stringify({ item_id }) }),
+  dismissChecklist: () => request('/onboarding/dismiss-checklist/', { method: 'POST' }),
+  skipTour: () => request('/onboarding/skip/', { method: 'POST' }),
+  finishTour: () => request('/onboarding/finish/', { method: 'POST' }),
+  restartTour: () => request('/onboarding/restart/', { method: 'POST' }),
 
   // Export URL helpers
   getExportUrl: (type) => `${API_BASE}/reports/export/${type}/`,

@@ -1,7 +1,24 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from app.models import Category, Supplier, Product, StockTransaction, LowStockAlert, UserProfile, AuditLog
+from app.models import (
+    Category, Supplier, Product, StockTransaction, 
+    LowStockAlert, UserProfile, AuditLog, UserOnboarding
+)
 from decimal import Decimal
+
+class UserOnboardingSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = UserOnboarding
+        fields = [
+            'id', 'username', 'version', 'welcome_seen', 'tour_status',
+            'current_chapter', 'current_step_index', 'completed_chapters',
+            'completed_checklist_items', 'checklist_dismissed',
+            'completed_at', 'skipped_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'username', 'created_at', 'updated_at']
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
