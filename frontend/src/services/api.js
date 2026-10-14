@@ -97,6 +97,7 @@ export const api = {
   // Employees & Staff Management
   getUsers: (params = '') => request(`/users/${params}`),
   createUser: (userData) => request('/users/', { method: 'POST', body: JSON.stringify(userData) }),
+  updateEmployee: (id, userData) => request(`/users/${id}/`, { method: 'PUT', body: JSON.stringify(userData) }),
   toggleUserActive: (id) => request(`/users/${id}/toggle-active/`, { method: 'POST' }),
   updateUserRole: (id, role) => request(`/users/${id}/update-role/`, { method: 'POST', body: JSON.stringify({ role }) }),
 

@@ -730,6 +730,71 @@ class UserViewSet(viewsets.ModelViewSet):
             'user': UserSerializer(user_obj).data
         })
 
+    def update(self, request, *args, **kwargs):
+        if not self.check_admin_permission(request):
+            return Response({'error': 'Only system administrators can edit employee accounts.'}, status=status.HTTP_403_FORBIDDEN)
+
+        user_obj = self.get_object()
+        data = request.data
+
+        username = data.get('username', user_obj.username).strip()
+        email = data.get('email', user_obj.email or '').strip().lower()
+        first_name = data.get('first_name', user_obj.first_name).strip()
+        last_name = data.get('last_name', user_obj.last_name).strip()
+        role = data.get('role', None)
+        password = data.get('password', '').strip()
+
+        # Check username uniqueness if changed
+        if username and username.lower() != user_obj.username.lower():
+            if User.objects.filter(username__iexact=username).exclude(id=user_obj.id).exists():
+                return Response({'error': f"Username '{username}' is already taken by another account."}, status=status.HTTP_400_BAD_REQUEST)
+            user_obj.username = username
+
+        # Check email uniqueness if changed
+        if email and email.lower() != (user_obj.email or '').lower():
+            if User.objects.filter(email__iexact=email).exclude(id=user_obj.id).exists():
+                return Response({'error': f"Email '{email}' is already associated with another account."}, status=status.HTTP_400_BAD_REQUEST)
+            user_obj.email = email
+
+        user_obj.first_name = first_name
+        user_obj.last_name = last_name
+
+        # Optionally update password if provided
+        if password:
+            user_obj.set_password(password)
+
+        profile, _ = UserProfile.objects.get_or_create(user=user_obj)
+
+        # Update role if provided
+        if role:
+            role = role.strip().upper()
+            valid_roles = [UserProfile.ROLE_ADMIN, UserProfile.ROLE_MANAGER, UserProfile.ROLE_OPERATOR, UserProfile.ROLE_VIEWER]
+            if role not in valid_roles:
+                return Response({'error': f"Invalid role. Must be one of: {', '.join(valid_roles)}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Prevent demoting own admin account
+            if user_obj.id == request.user.id and role != UserProfile.ROLE_ADMIN:
+                return Response({'error': 'You cannot remove your own administrator status.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            profile.role = role
+            profile.save()
+            user_obj.is_staff = (role in [UserProfile.ROLE_ADMIN, UserProfile.ROLE_MANAGER])
+
+        user_obj.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="USER_DETAILS_UPDATED",
+            target_entity="User",
+            target_id=str(user_obj.id),
+            details={'username': user_obj.username, 'email': user_obj.email, 'role': profile.role}
+        )
+
+        return Response({
+            'message': f"Employee '{user_obj.username}' updated successfully.",
+            'user': UserSerializer(user_obj).data
+        })
+
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class OnboardingViewSet(viewsets.ViewSet):

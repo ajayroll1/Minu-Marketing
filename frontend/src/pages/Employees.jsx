@@ -18,10 +18,18 @@ export default function Employees({ user: currentUser }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
-  // Role Edit Modal State
+  // Edit Employee Modal State (Full Employee Details)
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [selectedRole, setSelectedRole] = useState('OPERATOR');
-  const [savingRole, setSavingRole] = useState(false);
+  const [savingEmployee, setSavingEmployee] = useState(false);
+  const [editFormError, setEditFormError] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    first_name: '',
+    last_name: '',
+    username: '',
+    email: '',
+    role: 'OPERATOR',
+    password: ''
+  });
 
   // Add Employee Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -75,24 +83,43 @@ export default function Employees({ user: currentUser }) {
     }
   };
 
-  const handleOpenRoleModal = (emp) => {
+  const handleOpenEditModal = (emp) => {
     setEditingEmployee(emp);
-    setSelectedRole(emp.role || 'OPERATOR');
+    setEditFormError(null);
+    setEditFormData({
+      first_name: emp.first_name || '',
+      last_name: emp.last_name || '',
+      username: emp.username || '',
+      email: emp.email || '',
+      role: emp.role || 'OPERATOR',
+      password: ''
+    });
   };
 
-  const handleSaveRole = async (e) => {
+  const handleSaveEmployee = async (e) => {
     e.preventDefault();
     if (!editingEmployee) return;
-    setSavingRole(true);
+    setSavingEmployee(true);
+    setEditFormError(null);
     try {
-      const res = await api.updateUserRole(editingEmployee.id, selectedRole);
-      setActionMsg(res.message);
+      const payload = {
+        first_name: editFormData.first_name,
+        last_name: editFormData.last_name,
+        username: editFormData.username,
+        email: editFormData.email,
+        role: editFormData.role,
+      };
+      if (editFormData.password) {
+        payload.password = editFormData.password;
+      }
+      const res = await api.updateEmployee(editingEmployee.id, payload);
+      setActionMsg(res.message || `Employee "${editFormData.username}" updated successfully.`);
       setEditingEmployee(null);
       loadEmployees();
     } catch (err) {
-      alert(err.message);
+      setEditFormError(err.message);
     } finally {
-      setSavingRole(false);
+      setSavingEmployee(false);
     }
   };
 
@@ -187,6 +214,7 @@ export default function Employees({ user: currentUser }) {
           <button 
             type="button"
             className="btn-pill btn-pill-dark"
+            data-tour="team-add-employee"
             onClick={() => {
               setAddFormError(null);
               setShowAddModal(true);
@@ -340,9 +368,10 @@ export default function Employees({ user: currentUser }) {
                               type="button"
                               className="btn-pill btn-pill-soft"
                               style={{ padding: '6px 12px', fontSize: '0.76rem' }}
-                              onClick={() => handleOpenRoleModal(emp)}
+                              onClick={() => handleOpenEditModal(emp)}
+                              title="Edit Employee Details"
                             >
-                              <Edit3 size={13} /> Change Role
+                              <Edit3 size={13} /> Edit
                             </button>
 
                             <button
@@ -519,53 +548,104 @@ export default function Employees({ user: currentUser }) {
         </div>
       )}
 
-      {/* Modal 2: Assign Role Modal */}
+      {/* Modal 2: Edit Employee Details Modal */}
       {editingEmployee && (
         <div className="modal-overlay">
-          <div className="modal-content-rounded">
+          <div className="modal-content-rounded" style={{ maxWidth: '520px' }}>
             <div className="modal-header-rounded">
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Shield size={20} color="var(--accent-blue)" /> Assign Employee Role
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Edit3 size={20} color="var(--accent-blue)" /> Edit Employee Details
               </h3>
               <button 
                 onClick={() => setEditingEmployee(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#F8FAFD', borderRadius: '12px' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.94rem' }}>
-                {editingEmployee.first_name ? `${editingEmployee.first_name} ${editingEmployee.last_name || ''}` : editingEmployee.username}
+            {editFormError && (
+              <div style={{ padding: '12px 16px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '10px', marginBottom: '16px', fontSize: '0.86rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircle size={16} /> {editFormError}
               </div>
-              <div className="font-mono" style={{ fontSize: '0.82rem', color: 'var(--accent-blue)', marginTop: '2px' }}>
-                @{editingEmployee.username} &bull; {editingEmployee.email}
-              </div>
-            </div>
+            )}
 
-            <form onSubmit={handleSaveRole}>
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.88rem' }}>
-                  Select Access Privilege / Role:
-                </label>
+            <form onSubmit={handleSaveEmployee}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>First Name</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="First Name"
+                    value={editFormData.first_name}
+                    onChange={(e) => setEditFormData({ ...editFormData, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Last Name</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Last Name"
+                    value={editFormData.last_name}
+                    onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Username *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required
+                  placeholder="Username"
+                  value={editFormData.username}
+                  onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  placeholder="Email address"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Assigned Role *</label>
                 <select
                   className="form-control"
-                  style={{ padding: '10px 14px', fontWeight: 600 }}
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
+                  style={{ fontWeight: 600 }}
+                  value={editFormData.role}
+                  onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
                 >
                   <option value="ADMIN">Administrator (Full System & User Control)</option>
                   <option value="MANAGER">Inventory Manager (Stock, Products, Alert Thresholds)</option>
                   <option value="OPERATOR">Inventory Operator (Stock In / Dispatch Out)</option>
                   <option value="VIEWER">Read-Only Viewer (Auditing & Visibility only)</option>
                 </select>
-                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
-                  Role change se user ke permissions immediately update ho jayenge.
-                </small>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '28px' }}>
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>
+                  Reset Password (Leave blank to keep unchanged)
+                </label>
+                <input 
+                  type="password" 
+                  className="form-control" 
+                  placeholder="Enter new password if changing"
+                  value={editFormData.password}
+                  onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button 
                   type="button" 
                   className="btn-pill btn-pill-soft" 
@@ -576,9 +656,9 @@ export default function Employees({ user: currentUser }) {
                 <button 
                   type="submit" 
                   className="btn-pill btn-pill-dark"
-                  disabled={savingRole}
+                  disabled={savingEmployee}
                 >
-                  {savingRole ? 'Updating Role...' : 'Save Role'}
+                  {savingEmployee ? 'Saving Changes...' : 'Save Changes'}
                 </button>
               </div>
             </form>

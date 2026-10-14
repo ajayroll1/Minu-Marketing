@@ -183,6 +183,16 @@ export const TOUR_STEPS = [
     roleRequirement: 'ADMIN',
   },
   {
+    id: 'team-add-employee',
+    chapter: 'team',
+    tab: 'employees',
+    target: '[data-tour="team-add-employee"]',
+    title: 'Provision New Employees',
+    content: 'Add team members directly to the organization with assigned operational roles, verified credentials, and initial access permissions.',
+    placement: 'bottom',
+    roleRequirement: 'ADMIN',
+  },
+  {
     id: 'nav-audit-logs',
     chapter: 'team',
     tab: 'audit',
