@@ -198,16 +198,7 @@ def generate_inventory_alert_pdf(alerts_queryset=None, single_alert=None):
 
     story.append(table)
 
-    # 4. Push Note to bottom of page using dynamic Spacer
-    # Calculate approx height of table to ensure note is seated at the bottom
-    num_rows = len(table_data)
-    spacer_height = max(1.5 * inch, 4.2 * inch - (num_rows * 0.28 * inch))
-    story.append(Spacer(1, spacer_height))
-
-    # Bottom Advisory Note
-    note_border = HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E2E8F0'), spaceAfter=8)
-    story.append(note_border)
-
+    # 4. Official Advisory Note rendered anchored at the exact bottom of the page
     note_style = ParagraphStyle(
         'BottomNote',
         parent=styles['Normal'],
@@ -216,13 +207,28 @@ def generate_inventory_alert_pdf(alerts_queryset=None, single_alert=None):
         leading=11.5,
         textColor=colors.HexColor('#64748B')
     )
-    story.append(Paragraph(
+
+    procurement_note_para = Paragraph(
         "<b>Important Procurement Note:</b> This document is an automatically generated inventory replenishment requisition issued by Minu Marketing IMS. "
         "Procurement officers are instructed to immediately verify supplier stock availability, lead times, and dispatch purchase orders "
         "for products marked with OUT OF STOCK severity to prevent disruption of operations.",
         note_style
-    ))
+    )
 
-    doc.build(story)
+    def draw_page_decorations(canvas, document):
+        canvas.saveState()
+        # Thin divider line above footer at bottom
+        canvas.setStrokeColor(colors.HexColor('#E2E8F0'))
+        canvas.setLineWidth(0.8)
+        canvas.line(36, 68, letter[0] - 36, 68)
+
+        # Draw the official procurement advisory note anchored at page bottom
+        available_width = letter[0] - 72
+        w, h = procurement_note_para.wrap(available_width, 55)
+        procurement_note_para.drawOn(canvas, 36, 60 - h)
+        canvas.restoreState()
+
+    doc.bottomMargin = 75
+    doc.build(story, onFirstPage=draw_page_decorations, onLaterPages=draw_page_decorations)
     buffer.seek(0)
     return buffer.getvalue()

@@ -15,11 +15,11 @@ def send_alert_notification_email(alert, recipient_email=None):
     product = alert.product
 
     severity_label = "CRITICAL OUT OF STOCK" if alert.severity == 'OUT_OF_STOCK' else "LOW STOCK WARNING"
-    subject = f"[{severity_label}] Stock Alert: {product.name} ({product.sku})"
+    subject = f"{severity_label}: Stock Alert for {product.name} ({product.sku})"
 
     # Plaintext fallback
     text_content = f"""
-INVENTORY PRO - CRITICAL STOCK ALERT
+Minu Marketing - Inventory Alert System
 
 Alert Level: {severity_label}
 Product: {product.name}
@@ -52,7 +52,7 @@ Please find the detailed PDF replenishment report attached.
     .header p {{ margin: 0; font-size: 0.82rem; color: #94A3B8; }}
     .content {{ padding: 32px; }}
     .alert-banner {{ background-color: {badge_bg}; border: 1px solid {badge_color}33; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; }}
-    .alert-banner h3 {{ margin: 0 0 4px 0; font-size: 0.96rem; color: {badge_color}; font-weight: 800; }}
+    .alert-banner h3 {{ margin: 0 0 4px 0; font-size: 0.96rem; color: {badge_color}; font-weight: 800; letter-spacing: 0.3px; }}
     .alert-banner p {{ margin: 0; font-size: 0.84rem; color: #475569; }}
     .table-box {{ width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 0.88rem; }}
     .table-box td {{ padding: 10px 12px; border-bottom: 1px solid #F1F5F9; }}
@@ -70,7 +70,7 @@ Please find the detailed PDF replenishment report attached.
     </div>
     <div class="content">
       <div class="alert-banner">
-        <h3>🚨 {severity_label}</h3>
+        <h3>{severity_label}</h3>
         <p>{alert.notes}</p>
       </div>
 
