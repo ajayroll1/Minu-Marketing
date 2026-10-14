@@ -779,7 +779,10 @@ export default function App() {
           user={currentUser}
           completedStepsCount={activeTourSteps.length}
           totalStepsCount={activeTourSteps.length}
-          onFinish={() => setCompletionOpen(false)}
+          onFinish={() => {
+            setCompletionOpen(false);
+            setActiveTab('dashboard');
+          }}
           onRestart={handleRestartTour}
           onOpenChecklist={() => {
             setCompletionOpen(false);
