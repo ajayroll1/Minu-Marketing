@@ -281,6 +281,9 @@ export default function App() {
 
   const handleLogin = async (username, password) => {
     const res = await api.login(username, password);
+    if (res.token) {
+      localStorage.setItem('auth_token', res.token);
+    }
     setCurrentUser(res.user);
     setActiveTab('dashboard');
     loadAlertCount();
@@ -297,6 +300,7 @@ export default function App() {
       } catch (e) {
         console.error(e);
       } finally {
+        localStorage.removeItem('auth_token');
         setCurrentUser(null);
         setOnboardingState(null);
         setIsTourActive(false);

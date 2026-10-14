@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
+from rest_framework.authtoken.models import Token
 from django_filters.rest_framework import DjangoFilterBackend
 
 import random
@@ -129,6 +130,7 @@ class AuthSignupView(APIView):
 
         # Log in the user immediately
         login(request, user)
+        token, _ = Token.objects.get_or_create(user=user)
 
         AuditLog.objects.create(
             user=user,
@@ -140,6 +142,7 @@ class AuthSignupView(APIView):
 
         return Response({
             'message': 'Account created successfully.',
+            'token': token.key,
             'user': UserSerializer(user).data
         }, status=status.HTTP_201_CREATED)
 
@@ -207,8 +210,10 @@ class AuthLoginView(APIView):
                 return Response({'error': 'This account has been disabled.'}, status=status.HTTP_403_FORBIDDEN)
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
+            token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'message': 'Login successful.',
+                'token': token.key,
                 'user': UserSerializer(user).data
             })
         return Response({'error': 'Invalid username/email or password.'}, status=status.HTTP_401_UNAUTHORIZED)

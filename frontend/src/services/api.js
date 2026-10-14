@@ -18,10 +18,15 @@ function getCookie(name) {
 
 async function request(endpoint, options = {}) {
   const csrfToken = getCookie('csrftoken');
+  const authToken = localStorage.getItem('auth_token');
   const defaultHeaders = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+  if (authToken) {
+    defaultHeaders['Authorization'] = `Token ${authToken}`;
+  }
 
   if (csrfToken && options.method && options.method !== 'GET') {
     defaultHeaders['X-CSRFToken'] = csrfToken;
