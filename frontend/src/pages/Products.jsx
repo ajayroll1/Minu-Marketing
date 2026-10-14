@@ -31,6 +31,19 @@ export default function Products({ user }) {
   });
   const [formError, setFormError] = useState(null);
   const [actionMsg, setActionMsg] = useState(null);
+  const [exportingCsv, setExportingCsv] = useState(false);
+
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      await api.downloadExport('products', 'inventory_products.csv');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to export catalog');
+    } finally {
+      setExportingCsv(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -183,9 +196,14 @@ export default function Products({ user }) {
         </div>
 
         <div data-tour="products-header-actions" style={{ display: 'flex', gap: '12px' }}>
-          <a href={api.getExportUrl('products')} download className="btn btn-secondary">
-            <Download size={16} /> Export Catalog CSV
-          </a>
+          <button 
+            type="button" 
+            onClick={handleExportCsv} 
+            disabled={exportingCsv} 
+            className="btn btn-secondary"
+          >
+            <Download size={16} /> {exportingCsv ? 'Exporting...' : 'Export Catalog CSV'}
+          </button>
           {canEdit && (
             <button className="btn btn-primary" onClick={handleOpenCreate}>
               <Plus size={16} /> Create Product

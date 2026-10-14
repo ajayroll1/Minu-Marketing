@@ -21,6 +21,32 @@ export default function Alerts({ user }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [customThresholdVal, setCustomThresholdVal] = useState(10);
   const [savingThreshold, setSavingThreshold] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloadingPdf(true);
+      await api.downloadAlertPdf();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to download PDF report');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      await api.downloadExport('alerts', 'low_stock_alerts.csv');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to export CSV');
+    } finally {
+      setExportingCsv(false);
+    }
+  };
 
   // State for Table 2: Custom Alert Threshold Settings per Product
   const [thresholdSearch, setThresholdSearch] = useState('');
@@ -142,12 +168,22 @@ export default function Alerts({ user }) {
         </div>
 
         <div className="page-header-actions">
-          <a href={api.getAlertPdfUrl()} download className="btn-pill btn-pill-dark">
-            <Download size={14} /> PDF Report
-          </a>
-          <a href={api.getExportUrl('alerts')} download className="btn-pill btn-pill-soft">
-            <Download size={14} /> Export CSV
-          </a>
+          <button 
+            type="button" 
+            onClick={handleDownloadPdf} 
+            disabled={downloadingPdf} 
+            className="btn-pill btn-pill-dark"
+          >
+            <Download size={14} /> {downloadingPdf ? 'Generating PDF...' : 'PDF Report'}
+          </button>
+          <button 
+            type="button" 
+            onClick={handleExportCsv} 
+            disabled={exportingCsv} 
+            className="btn-pill btn-pill-soft"
+          >
+            <Download size={14} /> {exportingCsv ? 'Exporting...' : 'Export CSV'}
+          </button>
         </div>
       </div>
 
@@ -160,34 +196,44 @@ export default function Alerts({ user }) {
           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Products currently breaching minimum required inventory levels</div>
         </div>
 
-        {/* Toolbar: Search & Severity Filter */}
-        <div className="panel-toolbar-responsive" style={{ padding: '14px 24px', borderBottom: '1px solid var(--border-light)', backgroundColor: '#FAFBFC' }}>
-          <div className="panel-toolbar-left" style={{ flex: 1, minWidth: '240px' }}>
-            <div className="panel-search-box" style={{ flex: 1 }}>
-              <input
-                type="text"
-                className="panel-search-input"
-                placeholder="Search alerts by product name, SKU, notes..."
-                value={alertSearch}
-                onChange={(e) => {
-                  setAlertSearch(e.target.value);
-                  setAlertPage(1);
-                }}
-              />
-            </div>
-            <select
-              className="panel-filter-select"
-              value={alertSeverityFilter}
+        {/* Toolbar: Search (narrower) & Severity Filter (aligned horizontally on the right) */}
+        <div 
+          className="panel-toolbar-responsive" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            gap: '16px', 
+            padding: '14px 24px', 
+            borderBottom: '1px solid var(--border-light)', 
+            backgroundColor: '#FAFBFC' 
+          }}
+        >
+          <div className="panel-search-box" style={{ maxWidth: '320px', width: '100%', flex: '0 1 320px' }}>
+            <input
+              type="text"
+              className="panel-search-input"
+              placeholder="Search alerts by name, SKU, notes..."
+              value={alertSearch}
               onChange={(e) => {
-                setAlertSeverityFilter(e.target.value);
+                setAlertSearch(e.target.value);
                 setAlertPage(1);
               }}
-            >
-              <option value="ALL">All Severities</option>
-              <option value="OUT_OF_STOCK">Out of Stock</option>
-              <option value="LOW_STOCK">Low Stock</option>
-            </select>
+            />
           </div>
+          <select
+            className="panel-filter-select"
+            style={{ minWidth: '160px', flexShrink: 0 }}
+            value={alertSeverityFilter}
+            onChange={(e) => {
+              setAlertSeverityFilter(e.target.value);
+              setAlertPage(1);
+            }}
+          >
+            <option value="ALL">All Severities</option>
+            <option value="OUT_OF_STOCK">Out of Stock</option>
+            <option value="LOW_STOCK">Low Stock</option>
+          </select>
         </div>
 
         <div className="rounded-table-wrapper" style={{ maxHeight: '420px', overflowY: 'auto' }}>
@@ -311,33 +357,43 @@ export default function Alerts({ user }) {
         </div>
 
         {/* Toolbar: Search & Stock Status Filter */}
-        <div className="panel-toolbar-responsive" style={{ padding: '14px 24px', borderBottom: '1px solid var(--border-light)', backgroundColor: '#FAFBFC' }}>
-          <div className="panel-toolbar-left" style={{ flex: 1, minWidth: '240px' }}>
-            <div className="panel-search-box" style={{ flex: 1 }}>
-              <input
-                type="text"
-                className="panel-search-input"
-                placeholder="Search products by SKU, name, category..."
-                value={thresholdSearch}
-                onChange={(e) => {
-                  setThresholdSearch(e.target.value);
-                  setThresholdPage(1);
-                }}
-              />
-            </div>
-            <select
-              className="panel-filter-select"
-              value={thresholdFilter}
+        <div 
+          className="panel-toolbar-responsive" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            gap: '16px', 
+            padding: '14px 24px', 
+            borderBottom: '1px solid var(--border-light)', 
+            backgroundColor: '#FAFBFC' 
+          }}
+        >
+          <div className="panel-search-box" style={{ maxWidth: '320px', width: '100%', flex: '0 1 320px' }}>
+            <input
+              type="text"
+              className="panel-search-input"
+              placeholder="Search products by SKU, name, category..."
+              value={thresholdSearch}
               onChange={(e) => {
-                setThresholdFilter(e.target.value);
+                setThresholdSearch(e.target.value);
                 setThresholdPage(1);
               }}
-            >
-              <option value="ALL">All Items</option>
-              <option value="BREACHED">Breached (Stock &le; Threshold)</option>
-              <option value="NORMAL">Normal (Stock &gt; Threshold)</option>
-            </select>
+            />
           </div>
+          <select
+            className="panel-filter-select"
+            style={{ minWidth: '160px', flexShrink: 0 }}
+            value={thresholdFilter}
+            onChange={(e) => {
+              setThresholdFilter(e.target.value);
+              setThresholdPage(1);
+            }}
+          >
+            <option value="ALL">All Items</option>
+            <option value="BREACHED">Breached (Stock &le; Threshold)</option>
+            <option value="NORMAL">Normal (Stock &gt; Threshold)</option>
+          </select>
         </div>
 
         <div className="rounded-table-wrapper" style={{ maxHeight: '420px', overflowY: 'auto' }}>

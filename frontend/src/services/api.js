@@ -113,6 +113,48 @@ export const api = {
   finishTour: () => request('/onboarding/finish/', { method: 'POST' }),
   restartTour: () => request('/onboarding/restart/', { method: 'POST' }),
 
-  // Export URL helpers
-  getExportUrl: (type) => `${API_BASE}/reports/export/${type}/`,
+  // File download helper (fetches as blob with Auth Token and triggers native browser save)
+  downloadBlob: async (endpoint, defaultFilename) => {
+    const authToken = localStorage.getItem('auth_token');
+    const headers = {};
+    if (authToken) {
+      headers['Authorization'] = `Token ${authToken}`;
+    }
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'GET',
+      headers,
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      let msg = `Download failed (${response.status}: ${response.statusText})`;
+      try {
+        const errJson = await response.json();
+        msg = errJson.detail || errJson.error || msg;
+      } catch {
+        // ignore
+      }
+      throw new Error(msg);
+    }
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = defaultFilename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
+  },
+
+  // Export & Download URL helpers (with fallback query token for direct clicks)
+  getAlertPdfUrl: () => {
+    const token = localStorage.getItem('auth_token');
+    return `${API_BASE}/alerts/download-pdf/${token ? `?token=${token}` : ''}`;
+  },
+  getExportUrl: (type) => {
+    const token = localStorage.getItem('auth_token');
+    return `${API_BASE}/reports/export/${type}/${token ? `?token=${token}` : ''}`;
+  },
+  downloadAlertPdf: () => api.downloadBlob('/alerts/download-pdf/', 'critical_inventory_alerts.pdf'),
+  downloadExport: (type, filename) => api.downloadBlob(`/reports/export/${type}/`, filename || `${type}_report.csv`),
 };

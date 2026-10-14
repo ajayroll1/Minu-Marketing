@@ -14,6 +14,19 @@ export default function Transactions({ user }) {
   const [errorMsg, setErrorMsg] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [exportingCsv, setExportingCsv] = useState(false);
+
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      await api.downloadExport('transactions', 'stock_transactions_ledger.csv');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to export transaction ledger');
+    } finally {
+      setExportingCsv(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     product_id: '',
@@ -97,9 +110,14 @@ export default function Transactions({ user }) {
         </div>
 
         <div className="page-header-actions">
-          <a href={api.getExportUrl('transactions')} download className="btn-pill btn-pill-soft">
-            <Download size={14} /> Export CSV
-          </a>
+          <button 
+            type="button" 
+            onClick={handleExportCsv} 
+            disabled={exportingCsv} 
+            className="btn-pill btn-pill-soft"
+          >
+            <Download size={14} /> {exportingCsv ? 'Exporting...' : 'Export CSV'}
+          </button>
           {canTransact && (
             <button className="btn-pill btn-pill-dark" onClick={() => setShowModal(true)}>
               <Plus size={14} /> Record Movement

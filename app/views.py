@@ -408,6 +408,17 @@ class LowStockAlertViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='download-pdf')
     def download_pdf(self, request):
+        # Allow query parameter token auth for file downloads
+        if not request.user or not request.user.is_authenticated:
+            token_key = request.query_params.get('token')
+            if token_key:
+                token_obj = Token.objects.filter(key=token_key).select_related('user').first()
+                if token_obj and token_obj.user.is_active:
+                    request.user = token_obj.user
+
+        if not request.user or not request.user.is_authenticated:
+            return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+
         from app.pdf_generator import generate_inventory_alert_pdf
         alerts = LowStockAlert.objects.filter(status__in=[LowStockAlert.STATUS_ACTIVE, LowStockAlert.STATUS_ACKNOWLEDGED]).select_related('product')
         pdf_bytes = generate_inventory_alert_pdf(alerts_queryset=alerts)
@@ -510,6 +521,17 @@ class ExportReportsView(APIView):
         """
         Secure export to CSV with formula injection prevention
         """
+        # Allow query parameter token auth for file downloads
+        if not request.user or not request.user.is_authenticated:
+            token_key = request.query_params.get('token')
+            if token_key:
+                token_obj = Token.objects.filter(key=token_key).select_related('user').first()
+                if token_obj and token_obj.user.is_active:
+                    request.user = token_obj.user
+
+        if not request.user or not request.user.is_authenticated:
+            return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+
         response = HttpResponse(content_type='text/csv')
         writer = csv.writer(response)
 
