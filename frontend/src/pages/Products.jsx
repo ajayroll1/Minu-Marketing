@@ -53,11 +53,11 @@ export default function Products({ user }) {
     loadData();
   }, [search, statusFilter, currentPage]);
 
-  const loadData = async () => {
+  const loadData = async (page = currentPage, searchVal = search, statusVal = statusFilter) => {
     try {
       setLoading(true);
-      let query = `?page=${currentPage}&search=${encodeURIComponent(search)}`;
-      if (statusFilter) query += `&status=${statusFilter}`;
+      let query = `?page=${page}&search=${encodeURIComponent(searchVal)}`;
+      if (statusVal) query += `&status=${statusVal}`;
 
       const [prodRes, catRes, supRes] = await Promise.all([
         api.getProducts(query),
@@ -128,15 +128,26 @@ export default function Products({ user }) {
       };
 
       if (editingId) {
-        await api.updateProduct(editingId, payload);
+        const updated = await api.updateProduct(editingId, payload);
         setActionMsg(`Product ${formData.sku} updated successfully.`);
+        setShowModal(false);
+        // Instant optimistic update
+        setProducts(prev => prev.map(p => p.id === editingId ? { ...p, ...payload, ...updated } : p));
+        loadData(currentPage, search, statusFilter);
       } else {
-        await api.createProduct(payload);
+        const created = await api.createProduct(payload);
         setActionMsg(`Product ${formData.sku} created successfully.`);
+        setShowModal(false);
+        // Reset search & status so user immediately sees newly added product at top
+        setSearch('');
+        setStatusFilter('');
+        setCurrentPage(1);
+        if (created && created.id) {
+          setProducts(prev => [created, ...prev]);
+          setTotalCount(prev => prev + 1);
+        }
+        loadData(1, '', '');
       }
-
-      setShowModal(false);
-      loadData();
     } catch (err) {
       setFormError(err.message);
     }
@@ -145,21 +156,27 @@ export default function Products({ user }) {
   const handleArchive = async (id) => {
     if (!window.confirm('Are you sure you want to archive this product?')) return;
     try {
+      // Instant optimistic UI update
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'ARCHIVED' } : p));
       await api.archiveProduct(id);
       setActionMsg('Product archived successfully.');
-      loadData();
+      loadData(currentPage, search, statusFilter);
     } catch (err) {
       alert(err.message);
+      loadData(currentPage, search, statusFilter);
     }
   };
 
   const handleRestore = async (id) => {
     try {
+      // Instant optimistic UI update
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'ACTIVE' } : p));
       await api.restoreProduct(id);
       setActionMsg('Product restored successfully.');
-      loadData();
+      loadData(currentPage, search, statusFilter);
     } catch (err) {
       alert(err.message);
+      loadData(currentPage, search, statusFilter);
     }
   };
 
@@ -167,16 +184,21 @@ export default function Products({ user }) {
     if (!product) return;
     setDeletingProduct(true);
     try {
+      // Instant optimistic removal from UI
+      setProducts(prev => prev.filter(p => p.id !== product.id));
+      setTotalCount(prev => Math.max(0, prev - 1));
+      setConfirmDeleteModal(null);
       const res = await api.deleteProduct(product.id);
       setActionMsg(res?.message || `Archived product "${product.name}" (${product.sku}) deleted successfully.`);
-      setConfirmDeleteModal(null);
-      loadData();
+      loadData(currentPage, search, statusFilter);
     } catch (err) {
       alert(err.message);
+      loadData(currentPage, search, statusFilter);
     } finally {
       setDeletingProduct(false);
     }
   };
+
 
 
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.is_superuser;

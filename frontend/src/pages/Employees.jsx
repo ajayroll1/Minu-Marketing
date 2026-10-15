@@ -79,11 +79,14 @@ export default function Employees({ user: currentUser }) {
     }
 
     try {
+      // Instant optimistic update
+      setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, is_active: !e.is_active } : e));
       const res = await api.toggleUserActive(emp.id);
       setActionMsg(res.message);
       loadEmployees();
     } catch (err) {
       alert(err.message);
+      loadEmployees();
     }
   };
 
@@ -91,12 +94,15 @@ export default function Employees({ user: currentUser }) {
     if (!emp) return;
     setDeletingEmployee(true);
     try {
+      // Instant optimistic removal from UI
+      setEmployees(prev => prev.filter(e => e.id !== emp.id));
+      setConfirmDeleteEmployee(null);
       const res = await api.deleteEmployee(emp.id);
       setActionMsg(res?.message || `Employee "${emp.username}" permanently deleted.`);
-      setConfirmDeleteEmployee(null);
       loadEmployees();
     } catch (err) {
       alert(err.message);
+      loadEmployees();
     } finally {
       setDeletingEmployee(false);
     }
@@ -135,6 +141,8 @@ export default function Employees({ user: currentUser }) {
       const res = await api.updateEmployee(editingEmployee.id, payload);
       setActionMsg(res.message || `Employee "${editFormData.username}" updated successfully.`);
       setEditingEmployee(null);
+      // Instant optimistic update
+      setEmployees(prev => prev.map(e => e.id === editingEmployee.id ? { ...e, ...payload, ...(res?.user || {}) } : e));
       loadEmployees();
     } catch (err) {
       setEditFormError(err.message);
@@ -152,6 +160,14 @@ export default function Employees({ user: currentUser }) {
       const res = await api.createUser(newEmployee);
       setActionMsg(res.message || `Employee "${newEmployee.username}" created successfully.`);
       setShowAddModal(false);
+      // Reset search and filters so newly created employee appears immediately
+      setSearch('');
+      setRoleFilter('ALL');
+      setStatusFilter('ALL');
+      setCurrentPage(1);
+      if (res?.user) {
+        setEmployees(prev => [res.user, ...prev]);
+      }
       setNewEmployee({
         username: '',
         email: '',
@@ -167,6 +183,7 @@ export default function Employees({ user: currentUser }) {
       setCreatingUser(false);
     }
   };
+
 
   // Filter employees
   const filteredEmployees = employees.filter(emp => {

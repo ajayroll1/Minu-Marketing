@@ -349,30 +349,35 @@ class ProductViewSet(viewsets.ModelViewSet):
         })
 
     def destroy(self, request, *args, **kwargs):
-        product = self.get_object()
-        if product.status != Product.STATUS_ARCHIVED:
-            return Response(
-                {'error': 'Only archived products can be permanently deleted. Please archive the product first.'},
-                status=status.HTTP_400_BAD_REQUEST
+        try:
+            product = self.get_object()
+            if product.status != Product.STATUS_ARCHIVED:
+                return Response(
+                    {'error': 'Only archived products can be permanently deleted. Please archive the product first.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            sku = product.sku
+            name = product.name
+            prod_id = str(product.id)
+
+            # Clear transactions and alerts referencing this product to avoid ProtectedError
+            StockTransaction.objects.filter(product=product).delete()
+            LowStockAlert.objects.filter(product=product).delete()
+            product.delete()
+
+            AuditLog.objects.create(
+                user=request.user,
+                action="PRODUCT_DELETED",
+                target_entity="Product",
+                target_id=prod_id,
+                details={'sku': sku, 'name': name}
             )
 
-        sku = product.sku
-        name = product.name
-        prod_id = str(product.id)
+            return Response({'message': f"Archived product '{name}' ({sku}) has been permanently deleted."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f"Failed to delete product: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Clear transactions referencing this product to avoid ProtectedError on on_delete=PROTECT
-        product.transactions.all().delete()
-        product.delete()
-
-        AuditLog.objects.create(
-            user=request.user,
-            action="PRODUCT_DELETED",
-            target_entity="Product",
-            target_id=prod_id,
-            details={'sku': sku, 'name': name}
-        )
-
-        return Response({'message': f"Archived product '{name}' ({sku}) has been permanently deleted."}, status=status.HTTP_200_OK)
 
 
 
@@ -851,31 +856,35 @@ class UserViewSet(viewsets.ModelViewSet):
         })
 
     def destroy(self, request, *args, **kwargs):
-        if not self.check_admin_permission(request):
-            return Response({'error': 'Only system administrators can delete employee accounts.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            if not self.check_admin_permission(request):
+                return Response({'error': 'Only system administrators can delete employee accounts.'}, status=status.HTTP_403_FORBIDDEN)
 
-        user_obj = self.get_object()
-        if user_obj.id == request.user.id:
-            return Response({'error': 'You cannot delete your own account.'}, status=status.HTTP_400_BAD_REQUEST)
+            user_obj = self.get_object()
+            if user_obj.id == request.user.id:
+                return Response({'error': 'You cannot delete your own account.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user_obj.is_active:
-            return Response({'error': 'Only deactivated employees can be permanently deleted. Please deactivate this account first.'}, status=status.HTTP_400_BAD_REQUEST)
+            if user_obj.is_active:
+                return Response({'error': 'Only deactivated employees can be permanently deleted. Please deactivate this account first.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        username = user_obj.username
-        user_id = str(user_obj.id)
-        role = getattr(user_obj, 'profile', None).role if hasattr(user_obj, 'profile') else 'N/A'
+            username = user_obj.username
+            user_id = str(user_obj.id)
+            role = getattr(user_obj, 'profile', None).role if hasattr(user_obj, 'profile') else 'N/A'
 
-        user_obj.delete()
+            user_obj.delete()
 
-        AuditLog.objects.create(
-            user=request.user,
-            action="USER_DELETED",
-            target_entity="User",
-            target_id=user_id,
-            details={'username': username, 'role': role}
-        )
+            AuditLog.objects.create(
+                user=request.user,
+                action="USER_DELETED",
+                target_entity="User",
+                target_id=user_id,
+                details={'username': username, 'role': role}
+            )
 
-        return Response({'message': f"Employee '{username}' has been permanently deleted."}, status=status.HTTP_200_OK)
+            return Response({'message': f"Employee '{username}' has been permanently deleted."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f"Failed to delete employee: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
