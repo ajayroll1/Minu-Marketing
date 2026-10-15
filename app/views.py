@@ -633,12 +633,44 @@ class ExportReportsView(APIView):
         return response
 
 
-class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class AuditLogViewSet(viewsets.ModelViewSet):
     queryset = AuditLog.objects.select_related('user').all()
     serializer_class = AuditLogSerializer
     permission_classes = [RoleBasedPermission]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at']
+
+    def check_admin_permission(self, request):
+        if request.user.is_superuser:
+            return True
+        profile = getattr(request.user, 'profile', None)
+        return profile and profile.role in [UserProfile.ROLE_ADMIN, UserProfile.ROLE_MANAGER]
+
+    def destroy(self, request, *args, **kwargs):
+        if not self.check_admin_permission(request):
+            return Response({'error': 'Only administrators can delete audit logs.'}, status=status.HTTP_403_FORBIDDEN)
+        instance = self.get_object()
+        instance.delete()
+        return Response({'message': 'Audit log entry deleted successfully.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='clear-all')
+    def clear_all(self, request):
+        if not self.check_admin_permission(request):
+            return Response({'error': 'Only administrators can clear the audit trail.'}, status=status.HTTP_403_FORBIDDEN)
+        deleted_count = AuditLog.objects.all().delete()[0]
+        return Response({'message': f'Successfully cleared all {deleted_count} audit logs from database.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        if not self.check_admin_permission(request):
+            return Response({'error': 'Only administrators can delete audit logs.'}, status=status.HTTP_403_FORBIDDEN)
+        ids = request.data.get('ids', [])
+        if not ids or not isinstance(ids, list):
+            return Response({'error': 'Please provide a valid list of log IDs to delete.'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted_count = AuditLog.objects.filter(id__in=ids).delete()[0]
+        return Response({'message': f'Successfully deleted {deleted_count} selected audit logs.'}, status=status.HTTP_200_OK)
+
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')

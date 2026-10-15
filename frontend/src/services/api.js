@@ -95,6 +95,10 @@ export const api = {
 
   // Audit Logs
   getAuditLogs: () => request('/audit-logs/'),
+  deleteAuditLog: (id) => request(`/audit-logs/${id}/`, { method: 'DELETE' }),
+  clearAuditLogs: () => request('/audit-logs/clear-all/', { method: 'POST' }),
+  bulkDeleteAuditLogs: (ids) => request('/audit-logs/bulk-delete/', { method: 'POST', body: JSON.stringify({ ids }) }),
+
 
   // Employees & Staff Management
   getUsers: (params = '') => request(`/users/${params}`),
