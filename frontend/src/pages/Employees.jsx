@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { 
   Users, UserCheck, UserX, Shield, ShieldAlert, 
-  Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Edit3, X, UserPlus, Mail, Lock, User
+  Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Edit3, X, UserPlus, Mail, Lock, User, Trash2
 } from 'lucide-react';
+
 
 export default function Employees({ user: currentUser }) {
   const [employees, setEmployees] = useState([]);
@@ -21,7 +22,10 @@ export default function Employees({ user: currentUser }) {
   // Edit Employee Modal State (Full Employee Details)
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [savingEmployee, setSavingEmployee] = useState(false);
+  const [confirmDeleteEmployee, setConfirmDeleteEmployee] = useState(null);
+  const [deletingEmployee, setDeletingEmployee] = useState(false);
   const [editFormError, setEditFormError] = useState(null);
+
   const [editFormData, setEditFormData] = useState({
     first_name: '',
     last_name: '',
@@ -82,6 +86,22 @@ export default function Employees({ user: currentUser }) {
       alert(err.message);
     }
   };
+
+  const handleDeleteEmployee = async (emp) => {
+    if (!emp) return;
+    setDeletingEmployee(true);
+    try {
+      const res = await api.deleteEmployee(emp.id);
+      setActionMsg(res?.message || `Employee "${emp.username}" permanently deleted.`);
+      setConfirmDeleteEmployee(null);
+      loadEmployees();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingEmployee(false);
+    }
+  };
+
 
   const handleOpenEditModal = (emp) => {
     setEditingEmployee(emp);
@@ -387,7 +407,7 @@ export default function Employees({ user: currentUser }) {
                     </td>
 
                     <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '8px' }}>
+                      <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         {emp.id === currentUser?.id ? (
                           <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, padding: '6px 10px', backgroundColor: '#F1F5F9', borderRadius: '8px' }}>
                             Protected Account
@@ -418,6 +438,27 @@ export default function Employees({ user: currentUser }) {
                             >
                               {emp.is_active ? 'Deactivate' : 'Activate'}
                             </button>
+
+                            {!emp.is_active && (
+                              <button
+                                type="button"
+                                className="btn-pill btn-pill-soft"
+                                style={{
+                                  padding: '6px 12px',
+                                  fontSize: '0.76rem',
+                                  color: '#DC2626',
+                                  backgroundColor: '#FEE2E2',
+                                  borderColor: '#FECACA',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                onClick={() => setConfirmDeleteEmployee(emp)}
+                                title="Permanently Delete Inactive Employee"
+                              >
+                                <Trash2 size={13} /> Delete
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
@@ -692,6 +733,54 @@ export default function Employees({ user: currentUser }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal for Deactivated Employee */}
+      {confirmDeleteEmployee && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content-rounded" style={{ maxWidth: '440px', padding: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Trash2 size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Delete Inactive Employee</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Permanent account removal</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '22px' }}>
+              Are you sure you want to permanently delete employee account <strong>@{confirmDeleteEmployee.username}</strong> ({confirmDeleteEmployee.first_name ? `${confirmDeleteEmployee.first_name} ${confirmDeleteEmployee.last_name || ''}`.trim() : confirmDeleteEmployee.email || 'No Email'})? All user credentials and profile records will be permanently removed.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                type="button" 
+                className="btn-pill btn-pill-soft" 
+                disabled={deletingEmployee} 
+                onClick={() => setConfirmDeleteEmployee(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn-pill btn-pill-soft" 
+                disabled={deletingEmployee} 
+                onClick={() => handleDeleteEmployee(confirmDeleteEmployee)}
+                style={{
+                  backgroundColor: '#DC2626',
+                  color: '#FFFFFF',
+                  borderColor: '#DC2626',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Trash2 size={15} /> {deletingEmployee ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

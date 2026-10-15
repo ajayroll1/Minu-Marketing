@@ -10,10 +10,10 @@ export default function Login({ onLoginSuccess }) {
   // Mode: 'LOGIN' | 'SIGNUP' | 'FORGOT_PASSWORD'
   const [mode, setMode] = useState('LOGIN');
 
-  // Login form state
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('Admin12345!');
-  const [activeRole, setActiveRole] = useState('ADMIN');
+  // Login form state (empty by default, user inputs their credentials)
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [activeRole, setActiveRole] = useState('');
 
   // Forgot password form state
   const [resetData, setResetData] = useState({
@@ -98,9 +98,9 @@ export default function Login({ onLoginSuccess }) {
     }
   };
 
-  const handleQuickFill = (user, pass, role) => {
+  const handleQuickFill = (user, role) => {
     setUsername(user);
-    setPassword(pass);
+    setPassword('');
     setActiveRole(role);
   };
 
@@ -330,24 +330,24 @@ export default function Login({ onLoginSuccess }) {
                 </button>
               </form>
 
-              {/* Quick Demo Role Selector Pills */}
+              {/* Quick Role Selector Pills */}
               <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--border-light)' }}>
                 <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--text-muted)', fontWeight: 800, marginBottom: '8px' }}>
-                  Quick Demo Role Selector:
+                  Select your role:
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                   {[
-                    { label: 'Admin', user: 'admin', pass: 'Admin12345!', role: 'ADMIN' },
-                    { label: 'Manager', user: 'manager', pass: 'Manager12345!', role: 'MANAGER' },
-                    { label: 'Operator', user: 'operator', pass: 'Operator12345!', role: 'OPERATOR' },
-                    { label: 'Viewer', user: 'viewer', pass: 'Viewer12345!', role: 'VIEWER' },
+                    { label: 'Admin', user: 'admin', role: 'ADMIN' },
+                    { label: 'Manager', user: 'manager', role: 'MANAGER' },
+                    { label: 'Operator', user: 'operator', role: 'OPERATOR' },
+                    { label: 'Viewer', user: 'viewer', role: 'VIEWER' },
                   ].map((r, i) => (
                     <button 
                       key={i}
                       type="button" 
                       className={`btn-pill ${activeRole === r.role ? 'btn-pill-dark' : 'btn-pill-soft'}`}
                       style={{ padding: '7px 8px', fontSize: '0.74rem', borderRadius: '9999px' }}
-                      onClick={() => handleQuickFill(r.user, r.pass, r.role)}
+                      onClick={() => handleQuickFill(r.user, r.role)}
                     >
                       {r.label}
                     </button>

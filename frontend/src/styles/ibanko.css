@@ -9,13 +9,17 @@
 
 :root {
   /* Canvas & Base Surfaces */
-  --bg-app: #F5F7FB;                /* Soft grayish-blue canvas */
-  --bg-surface: #FFFFFF;            /* Pure Crisp White floating surfaces */
-  --bg-sidebar: #FFFFFF;            /* Clean crisp white sidebar */
+  --bg-app: #F5F7FB;
+  /* Soft grayish-blue canvas */
+  --bg-surface: #FFFFFF;
+  /* Pure Crisp White floating surfaces */
+  --bg-sidebar: #FFFFFF;
+  /* Clean crisp white sidebar */
   --bg-subtle: #F8FAFD;
 
   /* Black Hero Card */
-  --bg-hero: #11141C;               /* Pitch Slate / Black */
+  --bg-hero: #11141C;
+  /* Pitch Slate / Black */
   --text-hero: #FFFFFF;
   --text-hero-muted: #8E9BAE;
 
@@ -74,11 +78,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
-code, .font-mono {
+code,
+.font-mono {
   font-family: var(--font-mono);
 }
 
@@ -214,18 +222,38 @@ code, .font-mono {
   align-items: center;
   justify-content: center;
   color: #FFFFFF;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Waving Hand Emoji Animation (waves for ~3.5s then stops) */
 @keyframes wave-animation {
-  0% { transform: rotate(0deg); }
-  15% { transform: rotate(18deg); }
-  30% { transform: rotate(-14deg); }
-  45% { transform: rotate(16deg); }
-  60% { transform: rotate(-8deg); }
-  75% { transform: rotate(12deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(18deg);
+  }
+
+  30% {
+    transform: rotate(-14deg);
+  }
+
+  45% {
+    transform: rotate(16deg);
+  }
+
+  60% {
+    transform: rotate(-8deg);
+  }
+
+  75% {
+    transform: rotate(12deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .waving-hand {
@@ -262,7 +290,8 @@ code, .font-mono {
   flex-direction: column;
   gap: 3px;
   flex: 1;
-  overflow-y: hidden; /* No scrollbar on desktop sidebar */
+  overflow-y: hidden;
+  /* No scrollbar on desktop sidebar */
 }
 
 .sidebar-item {
@@ -529,6 +558,7 @@ code, .font-mono {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -634,6 +664,7 @@ code, .font-mono {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -991,7 +1022,7 @@ tr:hover td {
     width: 100%;
   }
 
-  .panel-toolbar-responsive > .panel-filter-select {
+  .panel-toolbar-responsive>.panel-filter-select {
     width: 100%;
     min-width: 0 !important;
   }
@@ -1017,6 +1048,7 @@ tr:hover td {
   background-color: #121826;
   color: #FFFFFF;
 }
+
 .btn-pill-dark:hover {
   background-color: #1F2937;
   text-decoration: none;
@@ -1027,6 +1059,7 @@ tr:hover td {
   border-color: var(--border-light);
   color: var(--text-primary);
 }
+
 .btn-pill-soft:hover {
   background-color: #F8FAFD;
   border-color: var(--border-hover);
@@ -1259,7 +1292,8 @@ tr:hover td {
   }
 
   .topbar-subtitle-text {
-    display: none; /* Hide long subtitle text on small screens */
+    display: none;
+    /* Hide long subtitle text on small screens */
   }
 
   .topbar-divider {
@@ -1369,6 +1403,7 @@ tr:hover td {
     font-size: 0.72rem;
   }
 }
+
 /* =========================================================================
    AUTHENTICATION VIEWPORT & ULTRA-MODERN IBANKO FRAME
    ========================================================================= */
@@ -1552,8 +1587,13 @@ tr:hover td {
 }
 
 @keyframes onboardingFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .onboarding-welcome-card {
@@ -1573,6 +1613,7 @@ tr:hover td {
     opacity: 0;
     transform: scale(0.96) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1698,9 +1739,17 @@ tr:hover td {
 }
 
 @keyframes pulseTargetRing {
-  0% { box-shadow: 0 0 0 2px rgba(43, 87, 122, 0.35); }
-  50% { box-shadow: 0 0 0 8px rgba(43, 87, 122, 0.08); }
-  100% { box-shadow: 0 0 0 2px rgba(43, 87, 122, 0.35); }
+  0% {
+    box-shadow: 0 0 0 2px rgba(43, 87, 122, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(43, 87, 122, 0.08);
+  }
+
+  100% {
+    box-shadow: 0 0 0 2px rgba(43, 87, 122, 0.35);
+  }
 }
 
 /* Spotlight Tooltip Popover */
@@ -1723,6 +1772,7 @@ tr:hover td {
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1893,11 +1943,13 @@ tr:hover td {
     transform: scale(0.99);
     border-color: var(--accent-blue);
   }
+
   50% {
     background-color: #D1FAE5;
     transform: scale(1.01);
     border-color: #10B981;
   }
+
   100% {
     transform: scale(1);
   }
@@ -1944,6 +1996,7 @@ tr:hover td {
 
 /* Reduced motion preference compliance */
 @media (prefers-reduced-motion: reduce) {
+
   .onboarding-modal-overlay,
   .onboarding-welcome-card,
   .onboarding-tooltip-card,
@@ -1953,5 +2006,3 @@ tr:hover td {
     transition: none !important;
   }
 }
-
-

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  LayoutDashboard, Package, ArrowLeftRight, Bell, Shield, 
+import {
+  LayoutDashboard, Package, ArrowLeftRight, Bell, Shield,
   LogOut, SlidersHorizontal, Camera, Calendar, CheckCircle2,
   X, Filter, ChevronDown, Check, Search, Users, Compass, HelpCircle
 } from 'lucide-react';
@@ -41,11 +41,14 @@ export default function App() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // Professional default executive avatar fallback
+  const DEFAULT_USER_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80';
+
   // Load persisted avatar scoped to the active user ID & profile
   useEffect(() => {
     if (currentUser?.id) {
       const userSpecificAvatar = localStorage.getItem(`user_custom_avatar_${currentUser.id}`);
-      setAvatarImage(currentUser.avatar || userSpecificAvatar || null);
+      setAvatarImage(currentUser.avatar || userSpecificAvatar || DEFAULT_USER_AVATAR);
     } else {
       setAvatarImage(null);
     }
@@ -355,7 +358,7 @@ export default function App() {
   return (
     <div className="ibanko-shell">
       {/* Mobile Drawer Backdrop */}
-      <div 
+      <div
         className={`sidebar-backdrop ${mobileSidebarOpen ? 'active' : ''}`}
         onClick={() => setMobileSidebarOpen(false)}
       />
@@ -372,7 +375,7 @@ export default function App() {
             </div>
 
             {/* Mobile-only Close Drawer Button */}
-            <button 
+            <button
               className="sidebar-close-btn"
               onClick={() => setMobileSidebarOpen(false)}
               title="Close Menu"
@@ -385,23 +388,23 @@ export default function App() {
 
           {/* User Profile Card with Photo Upload Capability */}
           <div className="user-avatar-card">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
               accept="image/*"
               onChange={handleAvatarFileChange}
             />
-            <div 
+            <div
               className="avatar-circle-wrapper"
               onClick={() => fileInputRef.current?.click()}
               title="Click to upload profile photo"
             >
               {avatarImage ? (
-                <img 
-                  src={avatarImage} 
-                  alt="Profile" 
-                  className="avatar-circle" 
+                <img
+                  src={avatarImage}
+                  alt="Profile"
+                  className="avatar-circle"
                   style={{ objectFit: 'cover' }}
                 />
               ) : (
@@ -422,7 +425,7 @@ export default function App() {
 
           <div className="sidebar-section-title">Overview</div>
           <nav className="sidebar-menu">
-            <div 
+            <div
               className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => { setActiveTab('dashboard'); setMobileSidebarOpen(false); }}
             >
@@ -430,7 +433,7 @@ export default function App() {
               <span>Dashboard</span>
             </div>
 
-            <div 
+            <div
               className={`sidebar-item ${activeTab === 'products' ? 'active' : ''}`}
               onClick={() => { setActiveTab('products'); setMobileSidebarOpen(false); }}
             >
@@ -438,7 +441,7 @@ export default function App() {
               <span>Products Catalog</span>
             </div>
 
-            <div 
+            <div
               className={`sidebar-item ${activeTab === 'transactions' ? 'active' : ''}`}
               onClick={() => { setActiveTab('transactions'); setMobileSidebarOpen(false); }}
             >
@@ -446,7 +449,7 @@ export default function App() {
               <span>Stock Ledger</span>
             </div>
 
-            <div 
+            <div
               className={`sidebar-item ${activeTab === 'alerts' ? 'active' : ''}`}
               onClick={() => { setActiveTab('alerts'); setMobileSidebarOpen(false); }}
             >
@@ -459,7 +462,7 @@ export default function App() {
 
             {(currentUser.role === 'ADMIN' || currentUser.is_superuser) && (
               <>
-                <div 
+                <div
                   className={`sidebar-item ${activeTab === 'employees' ? 'active' : ''}`}
                   onClick={() => { setActiveTab('employees'); setMobileSidebarOpen(false); }}
                 >
@@ -467,7 +470,7 @@ export default function App() {
                   <span>Employees</span>
                 </div>
 
-                <div 
+                <div
                   className={`sidebar-item ${activeTab === 'audit' ? 'active' : ''}`}
                   data-tour="nav-audit-logs"
                   onClick={() => { setActiveTab('audit'); setMobileSidebarOpen(false); }}
@@ -481,8 +484,8 @@ export default function App() {
 
           {/* Fixed Sign Out Button At Absolute Bottom */}
           <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--border-light)', flexShrink: 0 }}>
-            <div 
-              className={`sidebar-item signout-fluid-btn ${isLoggingOut ? 'logging-out' : ''}`} 
+            <div
+              className={`sidebar-item signout-fluid-btn ${isLoggingOut ? 'logging-out' : ''}`}
               onClick={handleLogout}
               title="Sign Out from System"
             >
@@ -499,7 +502,7 @@ export default function App() {
           <header className="ibanko-topbar">
             <div className="topbar-left-cluster">
               {/* Mobile Hamburger Drawer Toggle */}
-              <button 
+              <button
                 className="mobile-nav-toggle"
                 onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
                 title="Open Navigation Menu"
@@ -526,7 +529,7 @@ export default function App() {
 
             <div className="topbar-right-controls">
               {/* Product Tour Trigger Button */}
-              <button 
+              <button
                 className="btn-pill btn-pill-soft"
                 onClick={handleRestartTour}
                 title="Take Interactive Product Tour"
@@ -538,8 +541,8 @@ export default function App() {
 
               {/* Smooth Expandable Search Bar (Right to Left Transition) */}
               <div className={`topbar-search-wrapper ${searchOpen ? 'open' : ''}`} data-tour="topbar-search">
-                <div 
-                  className="icon-btn-round search-trigger-btn" 
+                <div
+                  className="icon-btn-round search-trigger-btn"
                   title={searchOpen ? "Close Search" : "Search Catalog & Items"}
                   onClick={() => setSearchOpen(!searchOpen)}
                 >
@@ -563,8 +566,8 @@ export default function App() {
                     }}
                   />
                   {searchQuery && (
-                    <button 
-                      className="topbar-search-clear" 
+                    <button
+                      className="topbar-search-clear"
                       onClick={() => setSearchQuery('')}
                       title="Clear"
                     >
@@ -587,8 +590,8 @@ export default function App() {
                       </div>
                     ) : (
                       searchResults.map((prod) => (
-                        <div 
-                          key={prod.id} 
+                        <div
+                          key={prod.id}
                           className="search-result-row"
                           onClick={() => {
                             setActiveTab('products');
@@ -606,7 +609,7 @@ export default function App() {
                       ))
                     )}
 
-                    <div 
+                    <div
                       className="search-results-footer"
                       onClick={() => {
                         setActiveTab('products');
@@ -621,8 +624,8 @@ export default function App() {
 
               {/* Working Notifications Bell with Modal/Dropdown */}
               <div style={{ position: 'relative' }}>
-                <div 
-                  className="icon-btn-round" 
+                <div
+                  className="icon-btn-round"
                   title="Notifications Feed"
                   onClick={handleOpenNotifications}
                   style={{ position: 'relative', backgroundColor: showNotifModal ? '#E2E8F0' : '#FFFFFF' }}
@@ -667,7 +670,7 @@ export default function App() {
                             Mark all as read
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={() => setShowNotifModal(false)}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
                         >
@@ -684,7 +687,7 @@ export default function App() {
                         </div>
                       ) : (
                         recentAlerts.map(a => (
-                          <div 
+                          <div
                             key={a.id}
                             onClick={() => handleNotificationItemClick(a)}
                             style={{
@@ -710,7 +713,7 @@ export default function App() {
 
                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                       {alertBadgeCount > 0 && (
-                        <button 
+                        <button
                           className="btn-pill btn-pill-soft"
                           style={{ flex: 1, fontSize: '0.78rem', padding: '8px' }}
                           onClick={handleMarkAllRead}
@@ -718,7 +721,7 @@ export default function App() {
                           Mark as Read
                         </button>
                       )}
-                      <button 
+                      <button
                         className="btn-pill btn-pill-dark"
                         style={{ flex: 1, fontSize: '0.78rem', padding: '8px' }}
                         onClick={() => { setShowNotifModal(false); setActiveTab('alerts'); }}
@@ -734,7 +737,7 @@ export default function App() {
 
           <section key={activeTab} className="view-content-body">
             {activeTab === 'dashboard' && (
-              <Dashboard 
+              <Dashboard
                 user={currentUser}
                 onNavigate={(tab) => setActiveTab(tab)}
                 onboardingState={onboardingState}
@@ -754,15 +757,15 @@ export default function App() {
 
       {/* Onboarding Modals & Spotlight Tooltip */}
       {welcomeOpen && (
-        <WelcomeModal 
-          user={currentUser} 
-          onStartTour={handleStartTour} 
-          onSkipTour={handleSkipTour} 
+        <WelcomeModal
+          user={currentUser}
+          onStartTour={handleStartTour}
+          onSkipTour={handleSkipTour}
         />
       )}
 
       {isTourActive && activeTourSteps[currentTourStepIdx] && (
-        <TourSpotlightTooltip 
+        <TourSpotlightTooltip
           step={activeTourSteps[currentTourStepIdx]}
           stepIndex={currentTourStepIdx}
           totalSteps={activeTourSteps.length}
@@ -775,7 +778,7 @@ export default function App() {
       )}
 
       {completionOpen && (
-        <TourCompletionModal 
+        <TourCompletionModal
           user={currentUser}
           completedStepsCount={activeTourSteps.length}
           totalStepsCount={activeTourSteps.length}

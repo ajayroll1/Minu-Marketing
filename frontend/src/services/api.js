@@ -73,6 +73,7 @@ export const api = {
   updateProduct: (id, productData) => request(`/products/${id}/`, { method: 'PATCH', body: JSON.stringify(productData) }),
   archiveProduct: (id) => request(`/products/${id}/archive/`, { method: 'POST' }),
   restoreProduct: (id) => request(`/products/${id}/restore/`, { method: 'POST' }),
+  deleteProduct: (id) => request(`/products/${id}/`, { method: 'DELETE' }),
   setAlertThreshold: (id, min_stock_level) => request(`/products/${id}/set-threshold/`, { method: 'POST', body: JSON.stringify({ min_stock_level }) }),
 
 
@@ -101,6 +102,8 @@ export const api = {
   updateEmployee: (id, userData) => request(`/users/${id}/`, { method: 'PUT', body: JSON.stringify(userData) }),
   toggleUserActive: (id) => request(`/users/${id}/toggle-active/`, { method: 'POST' }),
   updateUserRole: (id, role) => request(`/users/${id}/update-role/`, { method: 'POST', body: JSON.stringify({ role }) }),
+  deleteEmployee: (id) => request(`/users/${id}/`, { method: 'DELETE' }),
+
 
   // Onboarding & Interactive Tour Gateway
   getOnboardingStatus: () => request('/onboarding/status/'),

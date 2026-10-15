@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { 
   Plus, Search, Filter, Download, Archive, RefreshCw, 
-  CheckCircle, Edit2, ChevronLeft, ChevronRight 
+  CheckCircle, Edit2, ChevronLeft, ChevronRight, Trash2 
 } from 'lucide-react';
+
 
 export default function Products({ user }) {
   const [products, setProducts] = useState([]);
@@ -18,7 +19,10 @@ export default function Products({ user }) {
   // Modal states (Create & Edit)
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
+  const [deletingProduct, setDeletingProduct] = useState(false);
   const [formData, setFormData] = useState({
+
     name: '',
     sku: '',
     description: '',
@@ -159,6 +163,22 @@ export default function Products({ user }) {
     }
   };
 
+  const handleDeleteProduct = async (product) => {
+    if (!product) return;
+    setDeletingProduct(true);
+    try {
+      const res = await api.deleteProduct(product.id);
+      setActionMsg(res?.message || `Archived product "${product.name}" (${product.sku}) deleted successfully.`);
+      setConfirmDeleteModal(null);
+      loadData();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingProduct(false);
+    }
+  };
+
+
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.is_superuser;
 
   return (
@@ -273,7 +293,7 @@ export default function Products({ user }) {
                     </td>
                     {canEdit && (
                       <td style={{ textAlign: 'right' }}>
-                        <div data-tour="products-table-actions" style={{ display: 'inline-flex', gap: '6px' }}>
+                        <div data-tour="products-table-actions" style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                           <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEdit(p)} title="Edit details">
                             <Edit2 size={13} /> Edit
                           </button>
@@ -282,9 +302,19 @@ export default function Products({ user }) {
                               <Archive size={13} /> Archive
                             </button>
                           ) : (
-                            <button className="btn btn-secondary btn-sm" onClick={() => handleRestore(p.id)} title="Restore product">
-                              <RefreshCw size={13} /> Restore
-                            </button>
+                            <>
+                              <button className="btn btn-secondary btn-sm" onClick={() => handleRestore(p.id)} title="Restore product">
+                                <RefreshCw size={13} /> Restore
+                              </button>
+                              <button 
+                                className="btn btn-danger btn-sm" 
+                                onClick={() => setConfirmDeleteModal(p)} 
+                                title="Permanently delete archived product"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Trash2 size={13} /> Delete
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -454,6 +484,47 @@ export default function Products({ user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal for Archived Product */}
+      {confirmDeleteModal && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content-rounded" style={{ maxWidth: '440px', padding: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Trash2 size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Delete Archived Product</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Irreversible catalog action</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '22px' }}>
+              Are you sure you want to permanently delete <strong>{confirmDeleteModal.name}</strong> (<code style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{confirmDeleteModal.sku}</code>)? This product and its transaction logs will be permanently removed.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                disabled={deletingProduct} 
+                onClick={() => setConfirmDeleteModal(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                disabled={deletingProduct} 
+                onClick={() => handleDeleteProduct(confirmDeleteModal)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Trash2 size={15} /> {deletingProduct ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
