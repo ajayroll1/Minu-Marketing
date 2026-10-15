@@ -508,7 +508,15 @@ export default function App() {
                 title="Open Navigation Menu"
                 aria-label="Open Navigation Menu"
               >
-                <Package size={18} />
+                {avatarImage ? (
+                  <img
+                    src={avatarImage}
+                    alt={currentUser?.username}
+                    style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <Package size={18} />
+                )}
               </button>
 
               <div className="topbar-title-block">
@@ -530,14 +538,15 @@ export default function App() {
             <div className="topbar-right-controls">
               {/* Product Tour Trigger Button */}
               <button
-                className="btn-pill btn-pill-soft"
+                className="tour-trigger-btn"
                 onClick={handleRestartTour}
                 title="Take Interactive Product Tour"
-                style={{ fontSize: '0.8rem', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                aria-label="Take Interactive Product Tour"
               >
-                <Compass size={15} color="var(--accent-blue)" />
-                <span>Product Tour</span>
+                <Compass size={16} color="var(--accent-blue)" />
+                <span className="tour-trigger-text">Product Tour</span>
               </button>
+
 
               {/* Smooth Expandable Search Bar (Right to Left Transition) */}
               <div className={`topbar-search-wrapper ${searchOpen ? 'open' : ''}`} data-tour="topbar-search">

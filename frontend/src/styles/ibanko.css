@@ -470,6 +470,28 @@ code,
   position: relative;
 }
 
+/* Product Tour Trigger Button in Topbar */
+.tour-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.tour-trigger-btn:hover {
+  background-color: #F8FAFD;
+  border-color: var(--border-hover);
+}
+
 /* Expandable Search Bar Container (Right to Left Animation) */
 .topbar-search-wrapper {
   position: relative;
@@ -1308,6 +1330,21 @@ tr:hover td {
     display: none;
   }
 
+  .tour-trigger-text {
+    display: none !important;
+  }
+
+  .tour-trigger-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 3px rgba(18, 24, 38, 0.05);
+  }
+
   .icon-btn-round {
     width: 36px;
     height: 36px;
@@ -1396,13 +1433,24 @@ tr:hover td {
   }
 
   .topbar-greeting {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 135px;
+  }
+
+  .tour-trigger-btn,
+  .icon-btn-round {
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .topbar-date-pill {
     font-size: 0.72rem;
   }
 }
+
 
 /* =========================================================================
    AUTHENTICATION VIEWPORT & ULTRA-MODERN IBANKO FRAME
